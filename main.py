@@ -9,6 +9,8 @@ from server import *
 # 봇 권한 부여
 intents = discord.Intents(messages=True, guilds=True, members=True)
 bot = commands.Bot(command_prefix='!', intents=intents)
+# !도움말을 위한 기존에 있는 help 제거
+bot.remove_command('help')
 # 롤 내전에 필요한 변수
 join_member = []
 ''' Test member
@@ -35,11 +37,24 @@ async def on_guild_join(guild):
     guild_join(guild)
     for channel in guild.text_channels:
         if channel.permissions_for(guild.me).send_messages:
-            await channel.send('롤 내전 봇이 참여했습니다. 명령어는 !help입니다.', delete_after=10.0)
+            await channel.send('롤 내전 봇이 참여했습니다. 명령어는 !도움말입니다.', delete_after=10.0)
         break
 
 
-@bot.command(brief="내전을 시작합니다! 준비버튼을 눌러주세요!")  # Create a command inside a cog
+@bot.command()
+async def 도움말(ctx):
+    embed = discord.Embed(title="데바데 친죽 봇", description=".으로 명령을 내릴 수 있습니다.", color=0xffffff)
+
+    embed.add_field(name="!내전시작", value="내전을 시작합니다! 준비버튼을 눌러주세요!", inline=False)
+    embed.add_field(name="!다시", value="내전 참가 중 다른 사람이 버튼을 눌렀거나 불가피한 상황이 생겼을 경우 다시 시작합니다.", inline=False)
+    embed.add_field(name="!등록", value="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요! 티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!", inline=False)
+    embed.add_field(name="!참가완료", value="유저 10명이 채워졌을 때 밸런스를 맞춰 팀을 짜 줍니다.", inline=False)
+    embed.add_field(name="!도움말", value="이 메세지를 출력합니다.", inline=False)
+
+    await ctx.send(embed=embed)
+
+
+@bot.command(brief="내전을 시작합니다! 준비버튼을 눌러주세요!")
 async def 내전시작(ctx):
     global member_join_msg, join_member, button_msg
     await ctx.message.delete()
