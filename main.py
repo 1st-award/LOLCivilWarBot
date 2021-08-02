@@ -198,5 +198,4 @@ async def create_balance_team(ctx):
     msg = await ctx.send(embed=embed)
     member_join_msg.append(msg)
 
-# bot.run(os.environ["BOT_TOKEN"])
-bot.run('NDU1OTU3MzI0NjI0OTUzMzU0.Wx9RWQ.b50F3zApU-j1JYsusRJ54JEpi1Q')
+bot.run(os.environ["BOT_TOKEN"])

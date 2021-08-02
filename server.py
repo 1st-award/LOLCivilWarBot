@@ -5,7 +5,7 @@ import json
 import os
 from oauth2client.service_account import ServiceAccountCredentials
 
-
+'''
 # PC
 # 구글 스프레드 시트 연결
 scope = [
@@ -21,9 +21,9 @@ server_doc = gc.open_by_url(
 server_worksheet = server_doc.worksheet('serverInformation')
 log_worksheet = server_doc.worksheet('serverLog')
 lol_worksheet = server_doc.worksheet('lolUserInformation')
-
-
 '''
+
+
 # Heroku
 # 구글 스프레드 시트 연결
 def sync_spread():
@@ -42,7 +42,7 @@ def sync_spread():
     # 문제가 생기면 에러 로그를 출력합니다.
     except Exception as e:
         -1
-'''
+
 
 # 시간 얻기
 def date():
@@ -57,8 +57,8 @@ def time():
 
 # 길드에 들어 올 때
 def guild_join(guild):
-    # server_doc = sync_spread()
-    # server_worksheet = server_doc.worksheet('serverInformation')
+    server_doc = sync_spread()
+    server_worksheet = server_doc.worksheet('serverInformation')
     server_count = int(server_worksheet.acell('J1').value)
     server_worksheet.insert_row([str(guild.owner.id), str(guild.text_channels[0].id), '0'], server_count)
     server_worksheet.update_acell('J1', server_count + 1)
@@ -66,8 +66,8 @@ def guild_join(guild):
 
 # 롤 정보 등록
 def set_lol_info(user_id, lol_id, ability):
-    # server_doc = sync_spread()
-    # lol_worksheet = server_doc.worksheet('lolUserInformation')
+    server_doc = sync_spread()
+    lol_worksheet = server_doc.worksheet('lolUserInformation')
     result = is_sign_up(user_id)
     if result == 1:
         return "이미 등록되어있는 유저입니다."
@@ -80,8 +80,8 @@ def set_lol_info(user_id, lol_id, ability):
 
 # 등록 되어있는지 확인하기
 def is_sign_up(user_id):
-    # server_doc = sync_spread()
-    # lol_worksheet = server_doc.worksheet('lolUserInformation')
+    server_doc = sync_spread()
+    lol_worksheet = server_doc.worksheet('lolUserInformation')
     try:
         if lol_worksheet.find(str(user_id)):
             return 1
@@ -91,8 +91,8 @@ def is_sign_up(user_id):
 
 # 롤 정보 불러오기
 def get_ablity_score(user_list):
-    # server_doc = sync_spread()
-    # lol_worksheet = server_doc.worksheet('lolUserInformation')
+    server_doc = sync_spread()
+    lol_worksheet = server_doc.worksheet('lolUserInformation')
     ablity_dic = {}
     user_id = lol_worksheet.col_values(1)
     user_ablity = lol_worksheet.col_values(3)
@@ -103,8 +103,8 @@ def get_ablity_score(user_list):
 
 # 명령어 성공 했을 때
 def log(type, executed_command, guild_name, guild_id, author, author_id):
-    # server_doc = sync_spread()
-    # log_worksheet = server_doc.worksheet('serverLog')
+    server_doc = sync_spread()
+    log_worksheet = server_doc.worksheet('serverLog')
     count_server = int(log_worksheet.acell('J1').value)
     log_worksheet.insert_row(
         [type, date(), time(), executed_command, guild_name, guild_id, author, author_id], count_server)
