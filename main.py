@@ -8,7 +8,7 @@ from server import *
 
 # 봇 권한 부여
 intents = discord.Intents(messages=True, guilds=True, members=True)
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='@', intents=intents)
 # !도움말을 위한 기존에 있는 help 제거
 bot.remove_command('help')
 # 롤 내전에 필요한 변수
@@ -41,21 +41,31 @@ async def on_guild_join(guild):
         break
 
 
-@bot.command()
-async def 도움말(ctx):
-    embed = discord.Embed(title="데바데 친죽 봇", description=".으로 명령을 내릴 수 있습니다.", color=0xffffff)
+# 명령어가 성공했을 때 로그에 전송
+@bot.event
+async def on_command_completion(ctx):
+    full_command_name = ctx.command.qualified_name
+    split = full_command_name.split(" ")
+    executed_command = str(split[0])
+    # from server_send.py
+    log('INFO', executed_command, ctx.guild.name,
+        str(ctx.message.guild.id), str(ctx.message.author), str(ctx.message.author.id))
 
+
+@bot.command(name="도움말", brief="이 메세지를 출력합니다.")
+async def information(ctx):
+    await ctx.message.delete()
+    embed = discord.Embed(title="데바데 친죽 봇", description=".으로 명령을 내릴 수 있습니다.", color=0xffffff)
     embed.add_field(name="!내전시작", value="내전을 시작합니다! 준비버튼을 눌러주세요!", inline=False)
     embed.add_field(name="!다시", value="내전 참가 중 다른 사람이 버튼을 눌렀거나 불가피한 상황이 생겼을 경우 다시 시작합니다.", inline=False)
     embed.add_field(name="!등록", value="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요! 티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!", inline=False)
     embed.add_field(name="!참가완료", value="유저 10명이 채워졌을 때 밸런스를 맞춰 팀을 짜 줍니다.", inline=False)
     embed.add_field(name="!도움말", value="이 메세지를 출력합니다.", inline=False)
+    await ctx.send(embed=embed, delete_after=30.0)
 
-    await ctx.send(embed=embed)
 
-
-@bot.command(brief="내전을 시작합니다! 준비버튼을 눌러주세요!")
-async def 내전시작(ctx):
+@bot.command(name="내전시작", brief="내전을 시작합니다! 준비버튼을 눌러주세요!")
+async def start_join(ctx):
     global member_join_msg, join_member, button_msg
     await ctx.message.delete()
     if button_msg is not None:
@@ -86,8 +96,6 @@ async def 내전시작(ctx):
             elif number + 1 == 10:
                 msg = await interaction.message.channel.send(interaction.user.mention + "님이 참여했습니다!")
                 appendINFO(msg, interaction.user.id)
-                print(interaction.user.id)
-                print(interaction.user.mention)
                 button.style = discord.ButtonStyle.green
                 button.disabled = True
                 button.label = "참가 신청이 종료되었습니다! '!참가완료'를 입력해주세요."
@@ -110,8 +118,8 @@ async def 내전시작(ctx):
     button_msg = await ctx.send(content="참가 버튼을 눌러주세요! 한번 참여하면 취소를 못하니 신중하게 눌러 주세요!", view=JoinCivilWar())
 
 
-@bot.command(brief="내전 참가 중 다른 사람이 버튼을 눌렀거나 불가피한 상황이 생겼을 경우 다시 시작합니다.")
-async def 다시(ctx):
+@bot.command(name="다시", brief="내전 참가 중 다른 사람이 버튼을 눌렀거나 불가피한 상황이 생겼을 경우 다시 시작합니다.")
+async def reset_game(ctx):
     global join_member, member_join_msg, button_msg
     await ctx.message.delete()
     try:
@@ -134,8 +142,8 @@ async def 다시(ctx):
         await ctx.send(ctx.message.author.mention + " 초기화를 완료했습니다. 처음부터 다시 시작해주세요!", delete_after=10.0)
 
 
-@bot.command(brief="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요! 티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!")
-async def 등록(ctx):
+@bot.command(name="등록", brief="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요! 티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!")
+async def registration(ctx):
     await ctx.message.delete()
     try:
         msg = ctx.message.content.split()
@@ -148,8 +156,8 @@ async def 등록(ctx):
         await ctx.send(ctx.message.author.mention + " 형식이 잘못되었습니다.", delete_after=5.0)
 
 
-@bot.command()
-async def 참가완료(ctx):
+@bot.command(name="참가완료", brief="유저 10명이 채워졌을 때 밸런스를 맞춰 팀을 짜 줍니다.")
+async def create_balance_team(ctx):
     await ctx.message.delete()
     global member_join_msg
     if len(join_member) != 10:
