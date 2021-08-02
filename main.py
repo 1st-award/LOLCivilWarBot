@@ -58,7 +58,7 @@ async def on_command_error(ctx, error):
     await ctx.message.delete()
     # Command Not Found
     if str(type(error)) == str(discord.ext.commands.errors.CommandNotFound):
-        command_error = discord.Embed(title="명령어 오류", description="다음과 같은 에러가 발생했습니다.", colour=0xFF0000)
+        command_error = discord.Embed(title="명령어 오류", description="다음과 같은 에러가 발생했습니다.", color=0xFF0000)
         command_error.add_field(name="사용한 명령어:\0" + ctx.message.content,
                                 value='`' + ctx.message.content + "`는 없습니다.", inline=False)
         await ctx.send(embed=command_error, delete_after=7.0)
@@ -73,10 +73,11 @@ async def on_command_error(ctx, error):
             button.disabled = True
             button.label = "전송이 완료되었습니다. 감사합니다."
             await interaction.response.edit_message(view=self)
-            embed = discord.Embed(title="에러발생 일해라", description="다음과 같은 에러가 발생했습니다.", colour=0xFF0000)
+            embed = discord.Embed(title="에러발생 일해라", description="다음과 같은 에러가 발생했습니다.", color=0xFF0000)
             embed.add_field(name="사용한 명령어:\0" + ctx.message.content, value=error, inline=False)
             await bot_owner.send(embed=embed)
             await interaction.delete_original_message()
+
     await ctx.send(content="치명적인 에러가 발생했습니다! 개발자 일감을 주기 위해 전송 버튼을 눌러주세요!", view=ClickButton())
 
 
@@ -99,7 +100,9 @@ async def start_join(ctx):
     global member_join_msg, join_member, button_msg
     await ctx.message.delete()
     if button_msg is not None:
-        await ctx.send(ctx.message.author.mention + " 이미 내전을 시작했습니다!", delete_after=5.0)
+        already_start = discord.Embed(title="오류 발생",
+                                      description=ctx.message.author.mention + "\0이미 내전을 시작했습니다.", color=0xFF0000)
+        await ctx.send(embed=already_start, delete_after=5.0)
         return
 
     def appendINFO(msg_log, member):
@@ -114,17 +117,21 @@ async def start_join(ctx):
         @discord.ui.button(label="참가인원: 0", style=discord.ButtonStyle.blurple)
         async def count(self, button: discord.ui.Button, interaction: discord.Interaction):
             number = int(button.label[-1]) if button.label else 0
-            # Already join member use button
+            # No Register
             if is_sign_up(interaction.user.id) == 0:
-                msg = await interaction.message.channel.send(
-                    interaction.user.mention + "님은 등록이 되어있지 않은 유저입니다.\t!등록을 먼저 해주세요.")
-                member_join_msg.append(msg)
+                require_regist = discord.Embed(title="등록 요구",
+                                               description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 해주세요.",
+                                               color=0xFF0000)
+                await interaction.message.channel.send(embed=require_regist, delete_after=5.0)
+            # Already join member use button
             elif interaction.user.id in join_member:
-                msg = await interaction.message.channel.send(interaction.user.mention + "님은 이미 참여하셨습니다.")
-                member_join_msg.append(msg)
+                already_join = discord.Embed(title="중복 참여", description=ctx.message.author.mention + "님은 이미 참여하셨습니다.",
+                                             color=0xFF0000)
+                await interaction.message.channel.send(embed=already_join, delete_after=5.0)
             # Maximum 10 user
             elif number + 1 == 10:
-                msg = await interaction.message.channel.send(interaction.user.mention + "님이 참여했습니다!")
+                user_ready = discord.Embed(title="준비 완료", description=ctx.message.author.mention + "님이 참여했습니다!", color=0x98FB98)
+                msg = await interaction.message.channel.send(embed=user_ready)
                 appendINFO(msg, interaction.user.id)
                 button.style = discord.ButtonStyle.green
                 button.disabled = True
@@ -140,7 +147,8 @@ async def start_join(ctx):
             # Less than 10 user
             else:
                 button.label = "참가인원: " + str(number + 1)
-                msg = await interaction.message.channel.send(interaction.user.mention + "님이 참여했습니다!")
+                user_ready = discord.Embed(title="준비 완료", description=ctx.message.author.mention + "님이 참여했습니다!", color=0x98FB98)
+                msg = await interaction.message.channel.send(embed=user_ready)
                 appendINFO(msg, interaction.user.id)
                 # Make sure to update the message with our updated selves
                 await interaction.response.edit_message(view=self)
@@ -161,15 +169,18 @@ async def reset_game(ctx):
         member_join_msg = []
         await button_msg.delete()
         button_msg = None
-        await ctx.send(ctx.message.author.mention + " 초기화를 완료했습니다. 처음부터 다시 시작해주세요!", delete_after=10.0)
+        reset_clear = discord.Embed(title="초기화 완료", description=ctx.message.author.mention + "\0초기화를 완료했습니다.\0처음부터 다시 시작해주세요!", color=0x98FB98)
+        await ctx.send(embed=reset_clear, delete_after=10.0)
     except AttributeError:
-        await ctx.send(ctx.message.author.mention + " 내전이 시작되지 않았습니다.", delete_after=10.0)
+        not_yet_start = discord.Embed(title="초기화 오류", description=ctx.message.author.mention + "\0내전이 시작되지\0않았습니다.", color=0xFF0000)
+        await ctx.send(embed=not_yet_start, delete_after=10.0)
     except discord.ext.errors.CommandInvokeError:
         join_member = []
         member_join_msg = []
         await button_msg.delete()
         button_msg = None
-        await ctx.send(ctx.message.author.mention + " 초기화를 완료했습니다. 처음부터 다시 시작해주세요!", delete_after=10.0)
+        reset_clear = discord.Embed(title="초기화 완료", description=ctx.message.author.mention + "\0초기화를 완료했습니다.\0처음부터 다시 시작해주세요!", color=0x98FB98)
+        await ctx.send(embed=reset_clear, delete_after=10.0)
 
 
 @bot.command(name="등록", brief="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요! 티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!")
@@ -178,12 +189,16 @@ async def registration(ctx):
     try:
         msg = ctx.message.content.split()
         if 0 <= int(msg[2]) <= 10:
-            await ctx.send(ctx.message.author.mention + set_lol_info(ctx.message.author.id, msg[1], msg[2]),
-                           delete_after=5.0)
+            result = set_lol_info(ctx.message.author.id, msg[1], msg[2])
+            register_complete = discord.Embed(title="등록 완료",
+                                              description=ctx.message.author.mention + '\0' + result, color=0x98FB98)
+            await ctx.send(embed=register_complete, delete_after=5.0)
         else:
-            await ctx.send("1~10중 하나를 입력해주세요", delete_after=5.0)
+            out_of_range = discord.Embed(title="티어 범위 오류", description="1~10중 하나를 입력해주세요", color=0xFF0000)
+            await ctx.send(embed=out_of_range, delete_after=5.0)
     except AttributeError and ValueError:
-        await ctx.send(ctx.message.author.mention + " 형식이 잘못되었습니다.", delete_after=5.0)
+        attribute_error = discord.Embed(title="형식 오류", description="형식이 잘못되었습니다.\n`!등록`\t`[롤 닉네임]`\t`[티어]`를 입력해주세요!", color=0xFF0000)
+        await ctx.send(embed=attribute_error, delete_after=7.0)
 
 
 @bot.command(name="참가완료", brief="유저 10명이 채워졌을 때 밸런스를 맞춰 팀을 짜 줍니다.")
@@ -191,7 +206,8 @@ async def create_balance_team(ctx):
     await ctx.message.delete()
     global member_join_msg
     if len(join_member) != 10:
-        await ctx.send("내전이 시작되지 않았거나, 참가 인원이 10명이 아닙니다.", delete_after=5.0)
+        not_enough_user = discord.Embed(title="인원 부족 오류", description="내전이 시작되지 않았거나, 참가 인원이 10명이 아닙니다.", color=0xFF0000)
+        await ctx.send(embed=not_enough_user, delete_after=5.0)
         return
     user_dic = get_ablity_score(join_member)
     msg = await ctx.send("팀을 만듭니다...")
@@ -227,5 +243,6 @@ async def create_balance_team(ctx):
 
     msg = await ctx.send(embed=embed)
     member_join_msg.append(msg)
+
 
 bot.run(os.environ["BOT_TOKEN"])
