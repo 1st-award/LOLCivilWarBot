@@ -8,7 +8,7 @@ from server import *
 
 # 봇 권한 부여
 intents = discord.Intents(messages=True, guilds=True, members=True)
-bot = commands.Bot(command_prefix='@', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
 # !도움말을 위한 기존에 있는 help 제거
 bot.remove_command('help')
 # 롤 내전에 필요한 변수
@@ -52,13 +52,43 @@ async def on_command_completion(ctx):
         str(ctx.message.guild.id), str(ctx.message.author), str(ctx.message.author.id))
 
 
+# 명령어가 실패했을 때 로그에 전송
+@bot.event
+async def on_command_error(ctx, error):
+    await ctx.message.delete()
+    # Command Not Found
+    if str(type(error)) == str(discord.ext.commands.errors.CommandNotFound):
+        command_error = discord.Embed(title="명령어 오류", description="다음과 같은 에러가 발생했습니다.", colour=0xFF0000)
+        command_error.add_field(name="사용한 명령어:\0" + ctx.message.content,
+                                value='`' + ctx.message.content + "`는 없습니다.", inline=False)
+        await ctx.send(embed=command_error, delete_after=7.0)
+        return
+    # 봇 오너
+    bot_owner = bot.get_user(276532581829181441)
+
+    # Logical Error
+    class ClickButton(discord.ui.View):
+        @discord.ui.button(label="에러 전송하기", style=discord.ButtonStyle.red)
+        async def click_send(self, button: discord.ui.Button, interaction: discord.Interaction):
+            button.disabled = True
+            button.label = "전송이 완료되었습니다. 감사합니다."
+            await interaction.response.edit_message(view=self)
+            embed = discord.Embed(title="에러발생 일해라", description="다음과 같은 에러가 발생했습니다.", colour=0xFF0000)
+            embed.add_field(name="사용한 명령어:\0" + ctx.message.content, value=error, inline=False)
+            await bot_owner.send(embed=embed)
+            await interaction.delete_original_message()
+    await ctx.send(content="치명적인 에러가 발생했습니다! 개발자 일감을 주기 위해 전송 버튼을 눌러주세요!", view=ClickButton())
+
+
 @bot.command(name="도움말", brief="이 메세지를 출력합니다.")
 async def information(ctx):
     await ctx.message.delete()
     embed = discord.Embed(title="데바데 친죽 봇", description=".으로 명령을 내릴 수 있습니다.", color=0xffffff)
     embed.add_field(name="!내전시작", value="내전을 시작합니다! 준비버튼을 눌러주세요!", inline=False)
     embed.add_field(name="!다시", value="내전 참가 중 다른 사람이 버튼을 눌렀거나 불가피한 상황이 생겼을 경우 다시 시작합니다.", inline=False)
-    embed.add_field(name="!등록", value="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요! 티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!", inline=False)
+    embed.add_field(name="!등록",
+                    value="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요! 티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!",
+                    inline=False)
     embed.add_field(name="!참가완료", value="유저 10명이 채워졌을 때 밸런스를 맞춰 팀을 짜 줍니다.", inline=False)
     embed.add_field(name="!도움말", value="이 메세지를 출력합니다.", inline=False)
     await ctx.send(embed=embed, delete_after=30.0)
