@@ -1,5 +1,5 @@
 asyncio
-discord
+discord==2.0.0a
 gspread
 oauth2client
 requests
