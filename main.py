@@ -52,7 +52,7 @@ async def on_command_completion(ctx):
         str(ctx.message.guild.id), str(ctx.message.author), str(ctx.message.author.id))
 
 
-# 명령어가 실패했을 때 로그에 전송
+# 명령어가 실패했을 때 개발자에게 전송
 @bot.event
 async def on_command_error(ctx, error):
     await ctx.message.delete()
@@ -83,14 +83,14 @@ async def on_command_error(ctx, error):
 @bot.command(name="도움말", brief="이 메세지를 출력합니다.")
 async def information(ctx):
     await ctx.message.delete()
-    embed = discord.Embed(title="데바데 친죽 봇", description=".으로 명령을 내릴 수 있습니다.", color=0xffffff)
-    embed.add_field(name="!내전시작", value="내전을 시작합니다! 준비버튼을 눌러주세요!", inline=False)
-    embed.add_field(name="!다시", value="내전 참가 중 다른 사람이 버튼을 눌렀거나 불가피한 상황이 생겼을 경우 다시 시작합니다.", inline=False)
-    embed.add_field(name="!등록",
+    embed = discord.Embed(title="롤 내전 봇", description="`!`으로 명령을 내릴 수 있습니다.", color=0xffffff)
+    embed.add_field(name="`!내전시작`", value="내전을 시작합니다! 준비버튼을 눌러주세요!", inline=False)
+    embed.add_field(name="`!다시`", value="내전 참가 중 다른 사람이 버튼을 눌렀거나 불가피한 상황이 생겼을 경우 다시 시작합니다.", inline=False)
+    embed.add_field(name="`!등록`",
                     value="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요! 티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!",
                     inline=False)
-    embed.add_field(name="!참가완료", value="유저 10명이 채워졌을 때 밸런스를 맞춰 팀을 짜 줍니다.", inline=False)
-    embed.add_field(name="!도움말", value="이 메세지를 출력합니다.", inline=False)
+    embed.add_field(name="`!참가완료`", value="유저 10명이 채워졌을 때 밸런스를 맞춰 팀을 짜 줍니다.", inline=False)
+    embed.add_field(name="`!도움말`", value="이 메세지를 출력합니다.", inline=False)
     await ctx.send(embed=embed, delete_after=30.0)
 
 
