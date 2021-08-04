@@ -45,7 +45,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                 number = int(button.label[-1]) if button.label else 0
                 # No Register
                 await ctx.send(str(is_sign_up(interaction.user.id)))
-                if is_sign_up(interaction.user.id) == 0:
+                if is_sign_up(interaction.user.id) == None:
                     require_regist = discord.Embed(title="등록 요구",
                                                    description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 해주세요.",
                                                    color=0xFF0000)
