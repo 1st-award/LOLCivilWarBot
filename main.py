@@ -24,7 +24,6 @@ button_msg = None
 # 봇 준비
 @bot.event
 async def on_ready():
-    await bot.change_presence(activity=discord.Game(name="!도움말"))
     print(f"봇 이름: {bot.user.name}")
     for guilds in bot.guilds:
         print(str(guilds.owner_id))
@@ -153,8 +152,8 @@ async def start_join(ctx):
                 appendINFO(msg, interaction.user.id)
                 # Make sure to update the message with our updated selves
                 await interaction.response.edit_message(view=self)
-    start_game = discord.Embed(title="내전 시작", description="참가 버튼을 눌러주세요! 한번 참여하면 취소를 못하니 신중하게 눌러 주세요!", color=0x6495ED)
-    button_msg = await ctx.send(embed=start_game, view=JoinCivilWar())
+
+    button_msg = await ctx.send(content="참가 버튼을 눌러주세요! 한번 참여하면 취소를 못하니 신중하게 눌러 주세요!", view=JoinCivilWar())
 
 
 @bot.command(name="다시", brief="내전 참가 중 다른 사람이 버튼을 눌렀거나 불가피한 상황이 생겼을 경우 다시 시작합니다.")
