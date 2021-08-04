@@ -3,6 +3,7 @@ import datetime
 import gspread
 import json
 import os
+import requests
 from oauth2client.service_account import ServiceAccountCredentials
 
 '''
@@ -23,7 +24,6 @@ log_worksheet = server_doc.worksheet('serverLog')
 lol_worksheet = server_doc.worksheet('lolUserInformation')
 '''
 
-
 # Heroku
 # 구글 스프레드 시트 연결
 def sync_spread():
@@ -42,7 +42,6 @@ def sync_spread():
     # 문제가 생기면 에러 로그를 출력합니다.
     except Exception as e:
         -1
-
 
 # 시간 얻기
 def date():
@@ -65,17 +64,22 @@ def guild_join(guild):
 
 
 # 롤 정보 등록
-def set_lol_info(user_id, lol_id, ability):
+def set_lol_info(user_id, lol_nickname, ability):
     server_doc = sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
     result = is_sign_up(user_id)
     if result == 1:
-        return "이미 등록되어있는 유저입니다."
+        return 0
     else:
-        count_line = int(lol_worksheet.acell('J1').value)
-        lol_worksheet.insert_row([str(user_id), str(lol_id), str(ability)], count_line)
-        lol_worksheet.update_acell('J1', count_line + 1)
-        return " 등록이 완료되었습니다."
+        URL = "https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + lol_nickname
+        res = requests.get(URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
+        if res.status_code == 200:
+            count_line = int(lol_worksheet.acell('J1').value)
+            lol_worksheet.insert_row([str(user_id), str(lol_nickname), str(ability)], count_line)
+            lol_worksheet.update_acell('J1', count_line + 1)
+            return " 등록이 완료되었습니다."
+        else:
+            return -1
 
 
 # 등록 되어있는지 확인하기
@@ -89,7 +93,7 @@ def is_sign_up(user_id):
         return 0
 
 
-# 롤 정보 불러오기
+# 스프레드시트 롤 정보 불러오기
 def get_ablity_score(user_list):
     server_doc = sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
