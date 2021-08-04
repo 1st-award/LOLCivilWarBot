@@ -82,7 +82,8 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                     # Make sure to update the message with our updated selves
                     await interaction.response.edit_message(view=self)
 
-        start_game = discord.Embed(title="내전 시작", description="참가 버튼을 눌러주세요! 한번 참여하면 취소를 못하니 신중하게 눌러 주세요!", color=0x6495ED)
+        start_game = discord.Embed(title="내전 시작",
+                                   description="참가 버튼을 눌러주세요! 한번 참여하면 취소를 못하니 신중하게 눌러 주세요!", color=0x6495ED)
         button_msg = await ctx.send(embed=start_game, view=JoinCivilWar())
 
     @commands.command(name="다시", help="내전 참가 중 다른 사람이 버튼을 눌렀거나\n불가피한 상황이 생겼을 경우 다시 시작합니다.", usage="`!다시`")
@@ -117,7 +118,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             await ctx.send(embed=reset_clear, delete_after=10.0)
 
     @commands.command(name="등록",
-                      help="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요! 티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!",
+                      help="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요!\n티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!",
                       usage="`!등록`\0`롤 닉네임`\0`1~10사이의 실력`")
     async def registration(self, ctx):
         await ctx.message.delete()
