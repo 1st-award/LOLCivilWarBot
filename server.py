@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+import discord
 import gspread
 import json
 import os
@@ -24,6 +25,7 @@ log_worksheet = server_doc.worksheet('serverLog')
 lol_worksheet = server_doc.worksheet('lolUserInformation')
 '''
 
+
 # Heroku
 # 구글 스프레드 시트 연결
 def sync_spread():
@@ -42,6 +44,7 @@ def sync_spread():
     # 문제가 생기면 에러 로그를 출력합니다.
     except Exception as e:
         -1
+
 
 # 시간 얻기
 def date():
@@ -64,22 +67,39 @@ def guild_join(guild):
 
 
 # 롤 정보 등록
-def set_lol_info(user_id, lol_nickname, ability):
+def set_lol_info(ctx, user_id, lol_nickname, ability):
     server_doc = sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
     result = is_sign_up(user_id)
+    # Duplicate Registration
     if result == 1:
-        return 0
+        duplicate_registration = discord.Embed(title="중복 등록", description=ctx.message.author.mention +
+                                                                          "\0이미 등록되어 있는 유저입니다.",
+                                               color=0xFF0000)
+        return duplicate_registration
     else:
         URL = "https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + lol_nickname
         res = requests.get(URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
+        # Normal
         if res.status_code == 200:
             count_line = int(lol_worksheet.acell('J1').value)
             lol_worksheet.insert_row([str(user_id), str(lol_nickname), str(ability)], count_line)
             lol_worksheet.update_acell('J1', count_line + 1)
-            return " 등록이 완료되었습니다."
-        else:
-            return -1
+            register_complete = discord.Embed(title="등록 완료",
+                                              description=ctx.message.author.mention + '\0등록이 완료되었습니다.',
+                                              color=0x98FB98)
+            return register_complete
+        # Not Found Summoner
+        elif res.status_code == 404:
+            not_found_user = discord.Embed(title="존재하지 않는 소환사", description=ctx.message.author.mention +
+                                                                            "존재하지 않는 소환사 입니다.",
+                                           color=0xFF0000)
+            return not_found_user
+        # Need Regenerate
+        elif res.status_code == 403:
+            need_regenerate = discord.Embed(title="토큰 재인증 필요", description="개발자가 개을러서 재인증을 하지 않았습니다.\n"
+                                                                           "버튼을 눌러 재인증을 알려주세요!", color=0xFF0000)
+            return need_regenerate
 
 
 # 등록 되어있는지 확인하기
