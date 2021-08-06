@@ -87,7 +87,7 @@ def set_lol_info(ctx, user_id, lol_nickname, ability):
             lol_worksheet.update_acell('J1', count_line + 1)
             register_complete = discord.Embed(title="등록 완료",
                                               description=ctx.message.author.mention + '\0등록이 완료되었습니다.',
-                                              color=0x98FB98)
+                                              colour=discord.Colour.green())
             return register_complete
         # Not Found Summoner
         elif res.status_code == 404:

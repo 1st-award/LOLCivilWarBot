@@ -9,7 +9,7 @@ from server import *
 join_member = []
 ''' Test member
 join_member = [111111111111111111, 33333333333333, 2222222222222222, 44444444444444,
-               55555555555555555, 6666666666666, 7777777777777777, 77888888888888888, 999999999999999999]
+               55555555555555555, 6666666666666, 7777777777777777, 77888888888888888, 999999999999999999] 
 '''
 member_join_msg = []
 button_msg = None
@@ -35,15 +35,17 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             join_member.append(member)
 
         class JoinCivilWar(discord.ui.View):
+            number = 0
+
             # Define the actual button
             # When pressed, this increments the number displayed until it hits 5.
             # When it hits 5, the counter button is disabled and it turns green.
             # note: The name of the function does not matter to the library
-            @discord.ui.button(label="참가인원: 0", style=discord.ButtonStyle.blurple)
+            @discord.ui.button(label="참가", style=discord.ButtonStyle.red)
             async def count(self, button: discord.ui.Button, interaction: discord.Interaction):
-                number = int(button.label[-1]) if button.label else 0
+                JoinCivilWar.number += 1
                 # No Register
-                if is_sign_up(interaction.user.id) == None:
+                if is_sign_up(interaction.user.id) is None:
                     require_regist = discord.Embed(title="등록 요구",
                                                    description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 해주세요.",
                                                    color=0xFF0000)
@@ -55,9 +57,9 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                                                  color=0xFF0000)
                     await interaction.message.channel.send(embed=already_join, delete_after=5.0)
                 # Maximum 10 user
-                elif number + 1 == 10:
+                elif JoinCivilWar.number == 10:
                     user_ready = discord.Embed(title="준비 완료", description=ctx.message.author.mention + "님이 참여했습니다!",
-                                               color=0x98FB98)
+                                               colour=discord.Colour.green())
                     msg = await interaction.message.channel.send(embed=user_ready)
                     appendINFO(msg, interaction.user.id)
                     button.style = discord.ButtonStyle.green
@@ -65,6 +67,9 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                     button.label = "참가 신청이 종료되었습니다! '!참가완료'를 입력해주세요."
                     # Make sure to update the message with our updated selves
                     await interaction.response.edit_message(view=self)
+                    start_game.title = "내전 시작!!\t\t현재 참여 인원: 10"
+                    start_game.colour = discord.Colour.dark_green()
+                    await interaction.edit_original_message(embed=start_game)
                     # Delete join message after 30sec
                     await asyncio.sleep(30)
                     for delete_msg in member_join_msg:
@@ -73,16 +78,18 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                         await asyncio.sleep(0.3)
                 # Less than 10 user
                 else:
-                    button.label = "참가인원: " + str(number + 1)
                     user_ready = discord.Embed(title="준비 완료", description=ctx.message.author.mention + "님이 참여했습니다!",
-                                               color=0x98FB98)
+                                               colour=discord.Colour.green())
                     msg = await interaction.message.channel.send(embed=user_ready)
                     appendINFO(msg, interaction.user.id)
                     # Make sure to update the message with our updated selves
                     await interaction.response.edit_message(view=self)
+                    start_game.title = "내전 시작!!\t\t현재 참여 인원: " + str(JoinCivilWar.number)
+                    await interaction.edit_original_message(embed=start_game)
 
-        start_game = discord.Embed(title="내전 시작",
-                                   description="참가 버튼을 눌러주세요! 한번 참여하면 취소를 못하니 신중하게 눌러 주세요!", color=0x6495ED)
+        start_game = discord.Embed(title="내전 시작!!\t\t현재 참여 인원: 0",
+                                   description="참가 버튼을 눌러주세요! 한번 참여하면 취소를 못하니 신중하게 눌러 주세요!",
+                                   colour=discord.Colour.blurple())
         button_msg = await ctx.send(embed=start_game, view=JoinCivilWar())
 
     @commands.command(name="다시", help="내전 참가 중 다른 사람이 버튼을 눌렀거나\n불가피한 상황이 생겼을 경우 다시 시작합니다.", usage="`!다시`")
@@ -100,7 +107,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             button_msg = None
             reset_clear = discord.Embed(title="초기화 완료",
                                         description=ctx.message.author.mention + "\0초기화를 완료했습니다.\0처음부터 다시 시작해주세요!",
-                                        color=0x98FB98)
+                                        colour=discord.Colour.blurple())
             await ctx.send(embed=reset_clear, delete_after=10.0)
         except AttributeError:
             not_yet_start = discord.Embed(title="초기화 오류", description=ctx.message.author.mention + "\0내전이 시작되지\0않았습니다.",
@@ -113,7 +120,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             button_msg = None
             reset_clear = discord.Embed(title="초기화 완료",
                                         description=ctx.message.author.mention + "\0초기화를 완료했습니다.\0처음부터 다시 시작해주세요!",
-                                        color=0x98FB98)
+                                        colour=discord.Colour.blurple())
             await ctx.send(embed=reset_clear, delete_after=10.0)
 
     @commands.command(name="등록",
