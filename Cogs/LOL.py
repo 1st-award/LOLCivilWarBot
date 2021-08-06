@@ -127,7 +127,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                 result = set_lol_info(ctx, ctx.message.author.id, msg[1], msg[2])
 
                 if result.title == "토큰 재인증 필요":
-                    author = bot.get_user(276532581829181441)
+                    author = self.bot.get_user(276532581829181441)
 
                     class ClickReport(discord.ui.View):
                         @discord.ui.button(label="에러 전송하기", style=discord.ButtonStyle.red)
