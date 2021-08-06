@@ -125,25 +125,12 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
         try:
             msg = ctx.message.content.split()
             if 0 <= int(msg[2]) <= 10:
-                result = set_lol_info(ctx.message.author.id, msg[1], msg[2])
-                # Duplicate Registration
-                if result == 0:
-                    duplicate_registration = discord.Embed(title="중복 등록", description=ctx.message.author.mention +
-                                                                                      "\0이미 등록되어 있는 유저입니다.",
-                                                           color=0xFF0000)
-                    await ctx.send(embed=duplicate_registration, delete_after=5.0)
-                # Not Found Summoner
-                elif result == -1:
-                    not_found_user = discord.Embed(title="존재하지 않는 소환사", description=ctx.message.author.mention +
-                                                                                    "존재하지 않는 소환사 입니다.",
-                                                   color=0xFF0000)
-                    await ctx.send(embed=not_found_user, delete_after=5.0)
-                # Normal
+                result = set_lol_info(ctx, ctx.message.author.id, msg[1], msg[2])
+
+                if result.title == "토큰 재인증 필요":
+                    await ctx.send(embed=result, delete_after=5.0)
                 else:
-                    register_complete = discord.Embed(title="등록 완료",
-                                                      description=ctx.message.author.mention + '\0' + result,
-                                                      color=0x98FB98)
-                    await ctx.send(embed=register_complete, delete_after=5.0)
+                    await ctx.send(embed=result, delete_after=5.0)
             # Out Of Range
             else:
                 out_of_range = discord.Embed(title="티어 범위 오류", description="1~10중 하나를 입력해주세요", color=0xFF0000)
