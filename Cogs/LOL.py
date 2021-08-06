@@ -1,5 +1,4 @@
 import asyncio
-import discord
 import random
 from discord.ext import commands
 
@@ -128,7 +127,19 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                 result = set_lol_info(ctx, ctx.message.author.id, msg[1], msg[2])
 
                 if result.title == "토큰 재인증 필요":
-                    await ctx.send(embed=result, delete_after=5.0)
+                    author = bot.get_user(276532581829181441)
+
+                    class ClickReport(discord.ui.View):
+                        @discord.ui.button(label="에러 전송하기", style=discord.ButtonStyle.red)
+                        async def click_report(self, button: discord.ui.Button, interaction: discord.Interaction):
+                            button.disabled = True
+                            button.label = "전송이 완료되었습니다. 감사합니다."
+                            await interaction.response.edit_message(view=self)
+                            embed = discord.Embed(title="에러발생 일해라", description="롤 토큰 재인증 필요", color=0xFF0000)
+                            await author.send(embed=embed)
+                            await interaction.delete_original_message()
+
+                    await ctx.send(embed=result, view=ClickReport())
                 else:
                     await ctx.send(embed=result, delete_after=5.0)
             # Out Of Range
