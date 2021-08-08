@@ -43,9 +43,9 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             # note: The name of the function does not matter to the library
             @discord.ui.button(label="참가", style=discord.ButtonStyle.red)
             async def count(self, button: discord.ui.Button, interaction: discord.Interaction):
-                self.number += 1
+                JoinCivilWar.number += 1
                 # No Register
-                if await is_sign_up(interaction.user.id) is None:
+                if is_sign_up(interaction.user.id) is None:
                     require_regist = discord.Embed(title="등록 요구",
                                                    description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 해주세요.",
                                                    color=0xFF0000)
@@ -57,7 +57,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                                                  color=0xFF0000)
                     await interaction.message.channel.send(embed=already_join, delete_after=5.0)
                 # Maximum 10 user
-                elif self.number == 10:
+                elif JoinCivilWar.number == 10:
                     user_ready = discord.Embed(title="준비 완료", description=ctx.message.author.mention + "님이 참여했습니다!",
                                                colour=discord.Colour.green())
                     msg = await interaction.message.channel.send(embed=user_ready)
@@ -84,59 +84,13 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                     appendINFO(msg, interaction.user.id)
                     # Make sure to update the message with our updated selves
                     await interaction.response.edit_message(view=self)
-                    start_game.title = "내전 시작!!\t\t현재 참여 인원: " + str(self.number)
+                    start_game.title = "내전 시작!!\t\t현재 참여 인원: " + str(JoinCivilWar.number)
                     await interaction.edit_original_message(embed=start_game)
 
         start_game = discord.Embed(title="내전 시작!!\t\t현재 참여 인원: 0",
                                    description="참가 버튼을 눌러주세요! 한번 참여하면 취소를 못하니 신중하게 눌러 주세요!",
                                    colour=discord.Colour.blurple())
         button_msg = await ctx.send(embed=start_game, view=JoinCivilWar())
-
-    @commands.command(name="참가완료", help="유저 10명이 채워졌을 때 밸런스를 맞춰 팀을 짜 줍니다.", usage="`!참가완료`")
-    async def create_balance_team(self, ctx):
-        await ctx.message.delete()
-        global member_join_msg
-        if len(join_member) != 10:
-            not_enough_user = discord.Embed(title="인원 부족 오류", description="내전이 시작되지 않았거나, 참가 인원이 10명이 아닙니다.",
-                                            color=0xFF0000)
-            await ctx.send(embed=not_enough_user, delete_after=5.0)
-            return
-        user_dic = await get_ablity_score(join_member)
-        msg = await ctx.send("팀을 만듭니다...")
-        # Create a Bellance Team
-        while True:
-            blue_team_point = []
-            red_team = []
-            red_team_point = []
-            # Put 5 user in the blue team randomly
-            blue_team = random.sample(list(user_dic), 5)
-            # Users outside the Blue Team
-            for red in user_dic:
-                if red not in blue_team:
-                    red_team.append(red)
-            # Get the blue team's ablity
-            for ablity in blue_team:
-                blue_team_point.append(user_dic.get(ablity))
-            # Get the red team's ablity
-            for ablity in red_team:
-                red_team_point.append(user_dic.get(ablity))
-            # Team average difference between 0 and 0.25
-            if 0 <= abs(
-                    sum(blue_team_point) / len(blue_team_point) - sum(red_team_point) / len(blue_team_point)) <= 0.25:
-                break
-        await msg.delete()
-        embed = discord.Embed(title="결과", description="블루팀 평균: " + str(sum(blue_team_point) / len(blue_team_point)) +
-                                                      "\0레드팀 평균: " + str(sum(red_team_point) / len(blue_team_point)),
-                              color=0xffffff)
-        for blue in blue_team:
-            embed.add_field(name="블루팀", value='<@!' + str(blue) + '>', inline=False)
-        embed.add_field(name='=================================', value='=================================',
-                        inline=False)
-        for red in red_team:
-            embed.add_field(name="레드팀", value='<@!' + str(red) + '>', inline=False)
-
-        msg = await ctx.send(embed=embed)
-        member_join_msg.append(msg)
 
     @commands.command(name="다시", help="내전 참가 중 다른 사람이 버튼을 눌렀거나\n불가피한 상황이 생겼을 경우 다시 시작합니다.", usage="`!다시`")
     async def reset_game(self, ctx):
@@ -174,25 +128,10 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                       usage="`!등록`\0`롤 닉네임`\0`1~10사이의 실력`")
     async def registration(self, ctx):
         await ctx.message.delete()
-        await self.register(ctx, "등록")
-
-    @commands.command(name="수정", help="`등록`에서 적엇던 정보를 수정합니다.", usage="`!수정`\0`롤 닉네임`\0`1~10사이의 실력`")
-    async def modify_lol_info(self, ctx):
-        await ctx.message.delete()
-        if await modify_lol_info(ctx) == 1:
-            await self.register(ctx, "수정")
-        else:
-            require_regist = discord.Embed(title="등록 요구",
-                                           description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 "
-                                                                                    "해주세요.", color=0xFF0000)
-            await ctx.send(embed=require_regist, delete_after=5.0)
-
-    # LOL INFO Registration
-    async def register(self, ctx, register_type):
         try:
             msg = ctx.message.content.split()
             if 0 <= int(msg[2]) <= 10:
-                result = await set_lol_info(ctx, msg[1], msg[2])
+                result = set_lol_info(ctx, ctx.message.author.id, msg[1], msg[2])
 
                 if result.title == "토큰 재인증 필요":
                     author = self.bot.get_user(276532581829181441)
@@ -209,9 +148,6 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
 
                     await ctx.send(embed=result, view=ClickReport())
                 else:
-                    if register_type == "수정" and result.title == "등록 완료":
-                        result.title = "수정 완료"
-                        result.description = ctx.message.author.mention + '\0수정이 완료되었습니다.'
                     await ctx.send(embed=result, delete_after=5.0)
             # Out Of Range
             else:
@@ -222,6 +158,52 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                                             description="형식이 잘못되었습니다.\n`!등록`\t`[롤 닉네임]`\t`[티어]`를 입력해주세요!",
                                             color=0xFF0000)
             await ctx.send(embed=attribute_error, delete_after=7.0)
+
+    @commands.command(name="참가완료", help="유저 10명이 채워졌을 때 밸런스를 맞춰 팀을 짜 줍니다.", usage="`!참가완료`")
+    async def create_balance_team(self, ctx):
+        await ctx.message.delete()
+        global member_join_msg
+        if len(join_member) != 10:
+            not_enough_user = discord.Embed(title="인원 부족 오류", description="내전이 시작되지 않았거나, 참가 인원이 10명이 아닙니다.",
+                                            color=0xFF0000)
+            await ctx.send(embed=not_enough_user, delete_after=5.0)
+            return
+        user_dic = get_ablity_score(join_member)
+        msg = await ctx.send("팀을 만듭니다...")
+        # Create a Bellance Team
+        while True:
+            blue_team_point = []
+            red_team = []
+            red_team_point = []
+            # Put 5 user in the blue team randomly
+            blue_team = random.sample(list(user_dic), 5)
+            # Users outside the Blue Team
+            for red in user_dic:
+                if red not in blue_team:
+                    red_team.append(red)
+            # Get the blue team's ablity
+            for ablity in blue_team:
+                blue_team_point.append(user_dic.get(ablity))
+            # Get the red team's ablity
+            for ablity in red_team:
+                red_team_point.append(user_dic.get(ablity))
+            # Team average difference between 0 and 0.05
+            if 0 <= abs(
+                    sum(blue_team_point) / len(blue_team_point) - sum(red_team_point) / len(blue_team_point)) <= 0.25:
+                break
+        await msg.delete()
+        embed = discord.Embed(title="결과", description="블루팀 평균: " + str(sum(blue_team_point) / len(blue_team_point)) +
+                                                      "\0레드팀 평균: " + str(sum(red_team_point) / len(blue_team_point)),
+                              color=0xffffff)
+        for blue in blue_team:
+            embed.add_field(name="블루팀", value='<@!' + str(blue) + '>', inline=False)
+        embed.add_field(name='=================================', value='=================================',
+                        inline=False)
+        for red in red_team:
+            embed.add_field(name="레드팀", value='<@!' + str(red) + '>', inline=False)
+
+        msg = await ctx.send(embed=embed)
+        member_join_msg.append(msg)
 
 
 def setup(bot):
