@@ -30,7 +30,7 @@ async def on_ready():
 @bot.event
 async def on_guild_join(guild):
     # from server_send.py
-    await guild_join(guild)
+    guild_join(guild)
     for channel in guild.text_channels:
         if channel.permissions_for(guild.me).send_messages:
             await channel.send('롤 내전 봇이 참여했습니다. 명령어는 !도움말입니다.', delete_after=10.0)
@@ -44,8 +44,8 @@ async def on_command_completion(ctx):
     split = full_command_name.split(" ")
     executed_command = str(split[0])
     # from server_send.py
-    await log('INFO', executed_command, ctx.guild.name,
-              str(ctx.message.guild.id), str(ctx.message.author), str(ctx.message.author.id))
+    log('INFO', executed_command, ctx.guild.name,
+        str(ctx.message.guild.id), str(ctx.message.author), str(ctx.message.author.id))
 
 
 # 명령어가 실패했을 때 개발자에게 전송
@@ -80,7 +80,7 @@ async def on_command_error(ctx, error):
 
 @bot.command(name="로드")
 @commands.has_permissions(administrator=True)
-async def load_commands(extension):
+async def load_commands(ctx, extension):
     # 봇 오너
     bot_owner = bot.get_user(276532581829181441)
     bot.load_extension(f"Cogs.{extension}")
@@ -89,7 +89,7 @@ async def load_commands(extension):
 
 @bot.command(name="언로드")
 @commands.has_permissions(administrator=True)
-async def unload_commands(extension):
+async def unload_commands(ctx, extension):
     # 봇 오너
     bot_owner = bot.get_user(276532581829181441)
     bot.unload_extension(f"Cogs.{extension}")
@@ -98,7 +98,7 @@ async def unload_commands(extension):
 
 @bot.command(name="리로드")
 @commands.has_permissions(administrator=True)
-async def reload_commands(extension=None):
+async def reload_commands(ctx, extension=None):
     # 봇 오너
     bot_owner = bot.get_user(276532581829181441)
     if extension is None:  # extension이 None이면 (그냥 !리로드 라고 썼을 때)
