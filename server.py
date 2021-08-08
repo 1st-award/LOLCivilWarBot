@@ -6,6 +6,7 @@ import json
 import os
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
+
 '''
 # PC
 # 구글 스프레드 시트 연결
@@ -27,7 +28,7 @@ lol_worksheet = server_doc.worksheet('lolUserInformation')
 
 # Heroku
 # 구글 스프레드 시트 연결
-async def sync_spread():
+def sync_spread():
     try:
         scopes = ['https://spreadsheets.google.com/feeds',
                   'https://www.googleapis.com/auth/drive']
@@ -46,46 +47,44 @@ async def sync_spread():
 
 
 # 시간 얻기
-async def date():
+def date():
     now = datetime.datetime.now()
     return now.strftime('%Y-%m-%d')
 
 
-async def time():
+def time():
     now = datetime.datetime.now()
     return now.strftime('%H:%M:%S')
 
 
 # 길드에 들어 올 때
-async def guild_join(guild):
-    server_doc = await sync_spread()
+def guild_join(guild):
+    server_doc = sync_spread()
     server_worksheet = server_doc.worksheet('serverInformation')
-    server_worksheet.insert_row([str(guild.owner.id), str(guild.text_channels[0].id), '0'], 2)
-
-
-# 명령어 성공 했을 때
-async def log(type, executed_command, guild_name, guild_id, author, author_id):
-    server_doc = await sync_spread()
-    log_worksheet = server_doc.worksheet('serverLog')
-    log_worksheet.insert_row([type, await date(), await time(), executed_command, guild_name, guild_id, author, author_id], 2)
+    server_count = int(server_worksheet.acell('J1').value)
+    server_worksheet.insert_row([str(guild.owner.id), str(guild.text_channels[0].id), '0'], server_count)
+    server_worksheet.update_acell('J1', server_count + 1)
 
 
 # 롤 정보 등록
-async def set_lol_info(ctx, lol_nickname, ability):
-    server_doc = await sync_spread()
+def set_lol_info(ctx, user_id, lol_nickname, ability):
+    server_doc = sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
+    result = is_sign_up(user_id)
     # Duplicate Registration
-    if await is_sign_up(ctx) is not None:
+    if result == 1:
         duplicate_registration = discord.Embed(title="중복 등록", description=ctx.message.author.mention +
-                                                                          "\0이미 등록되어 있는 유저입니다.", color=0xFF0000)
+                                                                          "\0이미 등록되어 있는 유저입니다.",
+                                               color=0xFF0000)
         return duplicate_registration
     else:
         URL = "https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + lol_nickname
-        # res = requests.get(URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
-        res = requests.get(URL, headers={"X-Riot-Token": 'RGAPI-08e170df-672a-42e9-9d4f-29f645da8006'})
+        res = requests.get(URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
         # Normal
         if res.status_code == 200:
-            lol_worksheet.insert_row([str(ctx.message.author.id), str(lol_nickname), str(ability)], 2)
+            count_line = int(lol_worksheet.acell('J1').value)
+            lol_worksheet.insert_row([str(user_id), str(lol_nickname), str(ability)], count_line)
+            lol_worksheet.update_acell('J1', count_line + 1)
             register_complete = discord.Embed(title="등록 완료",
                                               description=ctx.message.author.mention + '\0등록이 완료되었습니다.',
                                               colour=discord.Colour.green())
@@ -93,7 +92,8 @@ async def set_lol_info(ctx, lol_nickname, ability):
         # Not Found Summoner
         elif res.status_code == 404:
             not_found_user = discord.Embed(title="존재하지 않는 소환사", description=ctx.message.author.mention +
-                                                                            "존재하지 않는 소환사 입니다.", color=0xFF0000)
+                                                                            "존재하지 않는 소환사 입니다.",
+                                           color=0xFF0000)
             return not_found_user
         # Need Regenerate
         elif res.status_code == 403:
@@ -102,35 +102,20 @@ async def set_lol_info(ctx, lol_nickname, ability):
             return need_regenerate
 
 
-# 등록 되어있는지 확인하기 (ture: return col_num false: return None)
-async def is_sign_up(ctx):
-    server_doc = await sync_spread()
+# 등록 되어있는지 확인하기
+def is_sign_up(user_id):
+    server_doc = sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
     try:
-        if lol_worksheet.find(str(ctx.message.author.id)):
-            split_col = str(lol_worksheet.find(str(ctx.message.author.id))).split()
-            split_col = split_col[1].split('R')
-            split_col = split_col[1].split('C')
-            return int(split_col[0])
+        if lol_worksheet.find(str(user_id)):
+            return 1
     except gspread.exceptions.CellNotFound:
-        return None
-
-
-# 등록 되어있는 롤 유저 정보 삭제하기 (true: return 1 false: col_num(None))
-async def modify_lol_info(ctx):
-    server_doc = await sync_spread()
-    lol_worksheet = server_doc.worksheet('lolUserInformation')
-    col_num = await is_sign_up(ctx)
-    if col_num > 0:
-        lol_worksheet.delete_row(col_num)
-        return 1
-    else:
-        return col_num
+        return 0
 
 
 # 스프레드시트 롤 정보 불러오기
-async def get_ablity_score(user_list):
-    server_doc = await sync_spread()
+def get_ablity_score(user_list):
+    server_doc = sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
     ablity_dic = {}
     user_id = lol_worksheet.col_values(1)
@@ -138,3 +123,13 @@ async def get_ablity_score(user_list):
     for user in user_list:
         ablity_dic[user] = int(user_ablity[user_id.index(str(user))])
     return ablity_dic
+
+
+# 명령어 성공 했을 때
+def log(type, executed_command, guild_name, guild_id, author, author_id):
+    server_doc = sync_spread()
+    log_worksheet = server_doc.worksheet('serverLog')
+    count_server = int(log_worksheet.acell('J1').value)
+    log_worksheet.insert_row(
+        [type, date(), time(), executed_command, guild_name, guild_id, author, author_id], count_server)
+    log_worksheet.update_acell('J1', count_server + 1)
