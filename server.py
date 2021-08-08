@@ -83,8 +83,7 @@ async def set_lol_info(ctx, lol_nickname, ability):
         return duplicate_registration
     else:
         URL = "https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + lol_nickname
-        # res = requests.get(URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
-        res = requests.get(URL, headers={"X-Riot-Token": 'RGAPI-08e170df-672a-42e9-9d4f-29f645da8006'})
+        res = requests.get(URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
         # Normal
         if res.status_code == 200:
             lol_worksheet.insert_row([str(ctx.message.author.id), str(lol_nickname), str(ability)], 2)
