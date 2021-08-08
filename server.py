@@ -6,6 +6,7 @@ import json
 import os
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
+
 '''
 # PC
 # 구글 스프레드 시트 연결
@@ -67,7 +68,8 @@ async def guild_join(guild):
 async def log(type, executed_command, guild_name, guild_id, author, author_id):
     server_doc = await sync_spread()
     log_worksheet = server_doc.worksheet('serverLog')
-    log_worksheet.insert_row([type, await date(), await time(), executed_command, guild_name, guild_id, author, author_id], 2)
+    log_worksheet.insert_row(
+        [type, await date(), await time(), executed_command, guild_name, guild_id, author, author_id], 2)
 
 
 # 롤 정보 등록
@@ -75,7 +77,7 @@ async def set_lol_info(ctx, lol_nickname, ability):
     server_doc = await sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
     # Duplicate Registration
-    if await is_sign_up(ctx) is not None:
+    if await is_sign_up(ctx.message.author.id) is not None:
         duplicate_registration = discord.Embed(title="중복 등록", description=ctx.message.author.mention +
                                                                           "\0이미 등록되어 있는 유저입니다.", color=0xFF0000)
         return duplicate_registration
@@ -103,12 +105,12 @@ async def set_lol_info(ctx, lol_nickname, ability):
 
 
 # 등록 되어있는지 확인하기 (ture: return col_num false: return None)
-async def is_sign_up(ctx):
+async def is_sign_up(user_id):
     server_doc = await sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
     try:
-        if lol_worksheet.find(str(ctx.message.author.id)):
-            split_col = str(lol_worksheet.find(str(ctx.message.author.id))).split()
+        if lol_worksheet.find(str(user_id)):
+            split_col = str(lol_worksheet.find(str(user_id))).split()
             split_col = split_col[1].split('R')
             split_col = split_col[1].split('C')
             return int(split_col[0])
@@ -117,10 +119,10 @@ async def is_sign_up(ctx):
 
 
 # 등록 되어있는 롤 유저 정보 삭제하기 (true: return 1 false: col_num(None))
-async def modify_lol_info(ctx):
+async def delete_lol_info(user_id):
     server_doc = await sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
-    col_num = await is_sign_up(ctx)
+    col_num = await is_sign_up(user_id)
     if col_num > 0:
         lol_worksheet.delete_row(col_num)
         return 1

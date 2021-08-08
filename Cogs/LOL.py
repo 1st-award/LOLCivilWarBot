@@ -179,7 +179,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
     @commands.command(name="수정", help="`등록`에서 적엇던 정보를 수정합니다.", usage="`!수정`\0`롤 닉네임`\0`1~10사이의 실력`")
     async def modify_lol_info(self, ctx):
         await ctx.message.delete()
-        if await modify_lol_info(ctx) == 1:
+        if await delete_lol_info(ctx.message.author.id) == 1:
             await self.register(ctx, "수정")
         else:
             require_regist = discord.Embed(title="등록 요구",
