@@ -223,7 +223,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                                             color=0xFF0000)
             await ctx.send(embed=attribute_error, delete_after=7.0)
 
-    @commands.command(name="정보", help="내 정보를 불러옵니다.", usage="!정보")
+    @commands.command(name="정보", help="내 정보를 불러옵니다.", usage="`!정보`")
     async def my_information(self, ctx):
         await ctx.message.delete()
         user_info = await get_lol_info(ctx.message.author.id)
