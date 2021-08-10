@@ -223,6 +223,22 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                                             color=0xFF0000)
             await ctx.send(embed=attribute_error, delete_after=7.0)
 
+    @commands.command(name="정보", help="내 정보를 불러옵니다.", usage="!정보")
+    async def my_information(self, ctx):
+        await ctx.message.delete()
+        user_info = await get_lol_info(ctx.message.author.id)
+        embed = discord.Embed(title=ctx.message.author.nick + "님의 정보", colour=discord.Colour.blurple(), timestamp=discord.utils.utcnow())
+        embed.set_thumbnail(url="https://ddragon.leagueoflegends.com/cdn/11.15.1/img/profileicon/" + str(user_info[0]) + ".png")
+        embed.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
+        embed.add_field(name="`롤 닉네임`", value=user_info[1], inline=True)
+        embed.add_field(name="`롤 레벨`", value=str(user_info[2]), inline=True)
+        embed.add_field(name="`최근 10게임 승/패`", value=str(user_info[3]) + "승\0" + str(user_info[4]) + "패", inline=False)
+        embed.set_footer(icon_url=ctx.bot.user.avatar.url, text=ctx.bot.user)
+        view = discord.ui.View()
+        item = discord.ui.Button(style=discord.ButtonStyle.link, label="자세한 내용", url="https://www.op.gg/summoner/userName="+user_info[1])
+        view.add_item(item=item)
+        await ctx.send(embed=embed, view=view)
+
 
 def setup(bot):
     bot.add_cog(LOL(bot))

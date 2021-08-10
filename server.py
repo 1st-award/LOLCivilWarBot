@@ -47,12 +47,12 @@ async def sync_spread():
 
 
 # 시간 얻기
-async def date():
+async def get_date():
     now = datetime.datetime.now()
     return now.strftime('%Y-%m-%d')
 
 
-async def time():
+async def get_time():
     now = datetime.datetime.now()
     return now.strftime('%H:%M:%S')
 
@@ -69,7 +69,7 @@ async def log(type, executed_command, guild_name, guild_id, author, author_id):
     server_doc = await sync_spread()
     log_worksheet = server_doc.worksheet('serverLog')
     log_worksheet.insert_row(
-        [type, await date(), await time(), executed_command, guild_name, guild_id, author, author_id], 2)
+        [type, await get_date(), await get_time(), executed_command, guild_name, guild_id, author, author_id], 2)
 
 
 # 롤 정보 등록
@@ -83,8 +83,7 @@ async def set_lol_info(ctx, lol_nickname, ability):
         return duplicate_registration
     else:
         URL = "https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + lol_nickname
-        # res = requests.get(URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
-        res = requests.get(URL, headers={"X-Riot-Token": 'RGAPI-08e170df-672a-42e9-9d4f-29f645da8006'})
+        res = requests.get(URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
         # Normal
         if res.status_code == 200:
             lol_worksheet.insert_row([str(ctx.message.author.id), str(lol_nickname), str(ability)], 2)
@@ -140,3 +139,37 @@ async def get_ablity_score(user_list):
     for user in user_list:
         ablity_dic[user] = int(user_ablity[user_id.index(str(user))])
     return ablity_dic
+
+
+# 롤 정보 불러오기 (set_lol_info에서 404에 대한 오류는 피했으므로 403만 대처)
+async def get_lol_info(user_id):
+    server_doc = await sync_spread()
+    lol_worksheet = server_doc.worksheet('lolUserInformation')
+    user_id = await is_sign_up(user_id)
+    lol_nickname = lol_worksheet.acell('B' + str(user_id)).value
+    # 유저 기본 정보 검색 (프로필, 레벨, puuid)
+    INFO_URL = "https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + lol_nickname
+    info_res = requests.get(INFO_URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
+    lol_info = info_res.json()
+    user_profile_icon = lol_info["profileIconId"]
+    user_level = lol_info["summonerLevel"]
+    user_ppuid = lol_info["puuid"]
+    # 최근 게임 10개 검색
+    MATCH_URL = "https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/" + user_ppuid + "/ids?start=0&count=10"
+    match_res = requests.get(MATCH_URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
+    match_info = match_res.json()
+    win = 0
+    defeat = 0
+    for match_num in range(0, 10):
+        # 각 매치 당 승, 패 검색
+        EACH_MATCH_URL = "https://asia.api.riotgames.com/lol/match/v5/matches/" + match_info[match_num]
+        each_match_res = requests.get(EACH_MATCH_URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
+        each_match_info = each_match_res.json()
+        for user_num in range(0, len(each_match_info["info"]["participants"])):
+            if each_match_info["info"]["participants"][user_num]["puuid"] == user_ppuid:
+                if each_match_info["info"]["participants"][user_num]["win"]:
+                    win += 1
+                else:
+                    defeat += 1
+                break
+    return [user_profile_icon, lol_nickname, user_level, win, defeat]
