@@ -3,7 +3,8 @@ import random
 from discord.ext import commands
 
 # 프로젝트 모듈
-from main import *
+import main
+from server import *
 
 # 롤 내전에 필요한 변수
 join_member = []
@@ -175,7 +176,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                 result = await set_lol_info(ctx, msg[1], msg[2])
 
                 if result.title == "토큰 재인증 필요":
-                    await on_command_error(ctx, "봇 토큰 재인증 필요")
+                    await main.on_command_error(ctx, "봇 토큰 재인증 필요")
                 else:
                     if register_type == "수정" and result.title == "등록 완료":
                         result.title = "수정 완료"
@@ -233,5 +234,5 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             await ctx.send(embed=embed, view=view, delete_after=60.0)
 
 
-def setup(_bot):
-    bot.add_cog(LOL(_bot))
+def setup(bot):
+    bot.add_cog(LOL(bot))
