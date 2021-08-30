@@ -108,7 +108,7 @@ async def is_sign_up(ctx):
             split_col = split_col[1].split('R')
             split_col = split_col[1].split('C')
             return int(split_col[0])
-    except gspread.exceptions.CellNotFound:
+    except gspread.exceptions.CellNotFound and gspread.IncorrectCellLabel:
         return discord.Embed(title="등록 요구",
                              description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 "
                                                                       "해주세요.", color=0xFF0000)
