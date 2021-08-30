@@ -35,7 +35,7 @@ creds_dict = json.loads(json_creds)
 creds_dict["private_key"] = creds_dict["private_key"].replace("\\\\n", "\n")
 creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scopes)
 gc = gspread.authorize(creds)
-server_doc = gc.open_by_url(os.environ(["SERVER_URL"]))
+server_doc = gc.open_by_url(os.environ["SERVER_URL"])
 worksheet_list = ["serverInformation", "serverLog", "lolUserInformation"]
 server_worksheet, log_worksheet, lol_worksheet = list(map(lambda x: server_doc.worksheet(x), worksheet_list))
 
