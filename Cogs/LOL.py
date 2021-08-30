@@ -3,6 +3,7 @@ import random
 from discord.ext import commands
 
 # 프로젝트 모듈
+import main
 from server import *
 
 # 롤 내전에 필요한 변수
@@ -17,8 +18,8 @@ button_msg = None
 
 class LOL(commands.Cog, name="롤 내전 명령어"):
 
-    def __init__(self, bot):
-        self.bot = bot
+    def __init__(self, _bot):
+        self.bot = _bot
 
     @commands.command(name="내전시작", help="내전을 시작합니다! 준비버튼을 눌러주세요!", usage="`!내전시작`")
     async def start_join(self, ctx):
@@ -45,11 +46,9 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             async def count(self, button: discord.ui.Button, interaction: discord.Interaction):
                 self.number += 1
                 # No Register
-                if await is_sign_up(interaction.user.id) is None:
-                    require_regist = discord.Embed(title="등록 요구",
-                                                   description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 해주세요.",
-                                                   color=0xFF0000)
-                    await interaction.message.channel.send(embed=require_regist, delete_after=5.0)
+                is_sign_up_result = await is_sign_up(ctx)
+                if isinstance(is_sign_up_result, discord.embeds.Embed):
+                    await interaction.message.channel.send(embed=is_sign_up_result, delete_after=5.0)
                 # Already join member use button
                 elif interaction.user.id in join_member:
                     already_join = discord.Embed(title="중복 참여",
@@ -169,24 +168,6 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                                         colour=discord.Colour.blurple())
             await ctx.send(embed=reset_clear, delete_after=10.0)
 
-    @commands.command(name="등록",
-                      help="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요!\n티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!",
-                      usage="`!등록`\0`롤 닉네임`\0`1~10사이의 실력`")
-    async def registration(self, ctx):
-        await ctx.message.delete()
-        await self.register(ctx, "등록")
-
-    @commands.command(name="수정", help="`등록`에서 적엇던 정보를 수정합니다.", usage="`!수정`\0`롤 닉네임`\0`1~10사이의 실력`")
-    async def modify_lol_info(self, ctx):
-        await ctx.message.delete()
-        if await delete_lol_info(ctx.message.author.id) == 1:
-            await self.register(ctx, "수정")
-        else:
-            require_regist = discord.Embed(title="등록 요구",
-                                           description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 "
-                                                                                    "해주세요.", color=0xFF0000)
-            await ctx.send(embed=require_regist, delete_after=5.0)
-
     # LOL INFO Registration
     async def register(self, ctx, register_type):
         try:
@@ -195,19 +176,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                 result = await set_lol_info(ctx, msg[1], msg[2])
 
                 if result.title == "토큰 재인증 필요":
-                    author = self.bot.get_user(276532581829181441)
-
-                    class ClickReport(discord.ui.View):
-                        @discord.ui.button(label="에러 전송하기", style=discord.ButtonStyle.red)
-                        async def click_report(self, button: discord.ui.Button, interaction: discord.Interaction):
-                            button.disabled = True
-                            button.label = "전송이 완료되었습니다. 감사합니다."
-                            await interaction.response.edit_message(view=self)
-                            embed = discord.Embed(title="에러발생 일해라", description="롤 토큰 재인증 필요", color=0xFF0000)
-                            await author.send(embed=embed)
-                            await interaction.delete_original_message()
-
-                    await ctx.send(embed=result, view=ClickReport())
+                    await main.on_command_error(ctx, "봇 토큰 재인증 필요")
                 else:
                     if register_type == "수정" and result.title == "등록 완료":
                         result.title = "수정 완료"
@@ -223,19 +192,30 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                                             color=0xFF0000)
             await ctx.send(embed=attribute_error, delete_after=7.0)
 
+    @commands.command(name="등록",
+                      help="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요!\n티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!",
+                      usage="`!등록`\0`롤 닉네임`\0`1~10사이의 실력`")
+    async def registration(self, ctx):
+        await ctx.message.delete()
+        await self.register(ctx, "등록")
+
+    @commands.command(name="수정", help="`등록`에서 적엇던 정보를 수정합니다.", usage="`!수정`\0`롤 닉네임`\0`1~10사이의 실력`")
+    async def modify_lol_info(self, ctx):
+        await ctx.message.delete()
+        delete_result = await delete_lol_info(ctx)
+        if isinstance(delete_result, discord.embeds.Embed):
+            await ctx.send(embed=delete_result, delete_after=5.0)
+        # delete success
+        elif delete_result == 1:
+            await self.register(ctx, "수정")
+
     @commands.command(name="정보", help="내 정보를 불러옵니다.", usage="`!정보`")
     async def my_information(self, ctx):
         await ctx.message.delete()
-        user_info = await get_lol_info(ctx.message.author.id, ctx)
+        user_info = await get_lol_info(ctx)
         # 서칭 중 에러가 return 됐을 때
-        if type(user_info) == discord.embeds.Embed:
+        if isinstance(user_info, discord.embeds.Embed):
             await ctx.send(embed=user_info, delete_after=5.0)
-        # 유저를 찾을 수 없을 때
-        elif user_info == -1:
-            require_regist = discord.Embed(title="등록 요구",
-                                           description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 "
-                                                                                    "해주세요.", color=0xFF0000)
-            await ctx.send(embed=require_regist, delete_after=5.0)
         else:
             embed = discord.Embed(title=ctx.message.author.nick + "님의 정보", colour=discord.Colour.blurple(),
                                   timestamp=discord.utils.utcnow())

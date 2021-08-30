@@ -52,7 +52,7 @@ async def on_command_completion(ctx):
 @bot.event
 async def on_command_error(ctx, error):
     # Command Not Found
-    if str(type(error)) == str(discord.ext.commands.errors.CommandNotFound):
+    if isinstance(error, discord.ext.commands.errors.CommandNotFound):
         command_error = discord.Embed(title="명령어 오류", description="다음과 같은 에러가 발생했습니다.", color=0xFF0000)
         command_error.add_field(name="사용한 명령어:\0" + ctx.message.content,
                                 value='`' + ctx.message.content + "`는 없습니다.", inline=False)
