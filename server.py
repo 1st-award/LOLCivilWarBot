@@ -96,12 +96,13 @@ async def set_lol_info(ctx, lol_nickname, ability):
     server_doc = await sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
     # Duplicate Registration
-    if await is_sign_up(ctx.message.author.id) is not None:
+    result_is_sign_up = await is_sign_up(ctx)
+    if isinstance(result_is_sign_up, int):
         duplicate_registration = discord.Embed(title="중복 등록", description=ctx.message.author.mention +
                                                                           "\0이미 등록되어 있는 유저입니다.", color=0xFF0000)
         return duplicate_registration
     # 소환사 검색에서 소환사의 정보가 있으면 google_spread에 유저를 등록
-    if await search_summoner(lol_nickname, ctx) == 200:
+    if await search_summoner(lol_nickname, ctx) != discord.embeds.Embed:
         lol_worksheet.insert_row([str(ctx.message.author.id), str(lol_nickname), str(ability)], 2)
         register_complete = discord.Embed(title="등록 완료",
                                           description=ctx.message.author.mention + '\0등록이 완료되었습니다.',
@@ -110,30 +111,32 @@ async def set_lol_info(ctx, lol_nickname, ability):
 
 
 # 등록 되어있는지 확인하기 (ture: return col_num false: return None)
-async def is_sign_up(user_id):
+async def is_sign_up(ctx):
     server_doc = await sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
     try:
-        user = lol_worksheet.find(str(user_id))
+        user = lol_worksheet.find(str(ctx.message.author.id))
         if user:
             split_col = str(user).split()
             split_col = split_col[1].split('R')
             split_col = split_col[1].split('C')
             return int(split_col[0])
     except gspread.exceptions.CellNotFound:
-        return None
+        return discord.Embed(title="등록 요구",
+                             description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 "
+                                                                      "해주세요.", color=0xFF0000)
 
 
 # 등록 되어있는 롤 유저 정보 삭제하기 (true: return 1 false: col_num(None))
-async def delete_lol_info(user_id):
+async def delete_lol_info(ctx):
     server_doc = await sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
-    col_num = await is_sign_up(user_id)
-    if col_num > 0:
+    col_num = await is_sign_up(ctx)
+    if isinstance(col_num, discord.embeds.Embed):
+        return col_num
+    else:
         lol_worksheet.delete_row(col_num)
         return 1
-    else:
-        return col_num
 
 
 # 스프레드시트 롤 정보 불러오기
@@ -210,10 +213,10 @@ async def count_win_defeat(user_ppuid):
 
 
 # 롤 정보 불러오기
-async def get_lol_info(user_id, ctx):
+async def get_lol_info(ctx):
     server_doc = await sync_spread()
     lol_worksheet = server_doc.worksheet('lolUserInformation')
-    user_id = await is_sign_up(user_id)
+    user_id = await is_sign_up(ctx)
     # 만약 유저를 찾을 수 없을 때(return이 None일 때) -1을 return
     if not user_id:
         return -1
@@ -221,12 +224,12 @@ async def get_lol_info(user_id, ctx):
     # 유저 기본 정보 검색 (프로필, 레벨, puuid)
     lol_info = await search_summoner(lol_nickname, ctx)
     # 정상적으로 유저 서칭이 되었을 때 (return 200을 받앗을 때)
-    if type(lol_info) == dict:
+    if isinstance(lol_info, dict):
         user_profile_icon = lol_info["profileIconId"]
         user_level = lol_info["summonerLevel"]
         user_ppuid = lol_info["puuid"]
         win, defeat = await count_win_defeat(user_ppuid)
         return [user_profile_icon, lol_nickname, user_level, win, defeat]
     # 정상적으로 값을 찾지 못했을 때 (오류 Embed가 들어왔을 때)
-    elif type(lol_info) == discord.embeds.Embed:
+    elif isinstance(lol_info, discord.embeds.Embed):
         return lol_info
