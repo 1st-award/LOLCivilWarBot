@@ -47,7 +47,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                 self.number += 1
                 # No Register
                 is_sign_up_result = await is_sign_up(ctx)
-                if isinstance(is_sign_up_result, discord.embeds.Embed):
+                if isinstance(is_sign_up_result, discord.Embed):
                     await interaction.message.channel.send(embed=is_sign_up_result, delete_after=5.0)
                 # Already join member use button
                 elif interaction.user.id in join_member:
@@ -203,7 +203,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
     async def modify_lol_info(self, ctx):
         await ctx.message.delete()
         delete_result = await delete_lol_info(ctx)
-        if isinstance(delete_result, discord.embeds.Embed):
+        if isinstance(delete_result, discord.Embed):
             await ctx.send(embed=delete_result, delete_after=5.0)
         # delete success
         elif delete_result == 1:
@@ -214,7 +214,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
         await ctx.message.delete()
         user_info = await get_lol_info(ctx)
         # 서칭 중 에러가 return 됐을 때
-        if isinstance(user_info, discord.embeds.Embed):
+        if isinstance(user_info, discord.Embed):
             await ctx.send(embed=user_info, delete_after=5.0)
         else:
             embed = discord.Embed(title=ctx.message.author.nick + "님의 정보", colour=discord.Colour.blurple(),
