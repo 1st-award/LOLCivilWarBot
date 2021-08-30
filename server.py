@@ -101,7 +101,7 @@ async def set_lol_info(ctx, lol_nickname, ability):
                                                                           "\0이미 등록되어 있는 유저입니다.", color=0xFF0000)
         return duplicate_registration
     # 소환사 검색에서 소환사의 정보가 있으면 google_spread에 유저를 등록
-    if await search_summoner(lol_nickname, ctx) == 200:
+    if await search_summoner(lol_nickname, ctx) != discord.embeds.Embed:
         lol_worksheet.insert_row([str(ctx.message.author.id), str(lol_nickname), str(ability)], 2)
         register_complete = discord.Embed(title="등록 완료",
                                           description=ctx.message.author.mention + '\0등록이 완료되었습니다.',
