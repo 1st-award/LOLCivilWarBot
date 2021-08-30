@@ -3,3 +3,4 @@ git+https://github.com/Rapptz/discord.py
 gspread
 oauth2client
 requests
+discord
