@@ -37,7 +37,7 @@ async def sync_spread():
         creds_dict["private_key"] = creds_dict["private_key"].replace("\\\\n", "\n")
         creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scopes)
         gc = gspread.authorize(creds)
-        server_doc = gc.open_by_url(os.environ(["SERVER_URL"]))
+        server_doc = gc.open_by_url(os.environ["SERVER_URL"])
         return server_doc
 
     # 문제가 생기면 에러 로그를 출력합니다.
