@@ -38,7 +38,7 @@ try:
     gc = gspread.authorize(creds)
     server_doc = gc.open_by_url(os.environ(["SERVER_URL"]))
     worksheet_list = ["serverInformation", "serverLog", "lolUserInformation"]
-    lol_worksheet, log_worksheet, server_worksheet = list(map(lambda x: server_doc.worksheet(x), worksheet_list))
+    server_worksheet, log_worksheet, lol_worksheet = list(map(lambda x: server_doc.worksheet(x), worksheet_list))
 
 # 문제가 생기면 에러 로그를 출력합니다.
 except Exception as e:
