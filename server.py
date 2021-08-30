@@ -28,21 +28,16 @@ lol_worksheet = server_doc.worksheet('lolUserInformation')
 
 # Heroku
 # 구글 스프레드 시트 연결
-try:
-    scopes = ['https://spreadsheets.google.com/feeds',
+scopes = ['https://spreadsheets.google.com/feeds',
                 'https://www.googleapis.com/auth/drive']
-    json_creds = os.getenv("GOOGLE_KEYS")
-    creds_dict = json.loads(json_creds)
-    creds_dict["private_key"] = creds_dict["private_key"].replace("\\\\n", "\n")
-    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scopes)
-    gc = gspread.authorize(creds)
-    server_doc = gc.open_by_url(os.environ(["SERVER_URL"]))
-    worksheet_list = ["serverInformation", "serverLog", "lolUserInformation"]
-    server_worksheet, log_worksheet, lol_worksheet = list(map(lambda x: server_doc.worksheet(x), worksheet_list))
-
-# 문제가 생기면 에러 로그를 출력합니다.
-except Exception as e:
-    -1
+json_creds = os.getenv("GOOGLE_KEYS")
+creds_dict = json.loads(json_creds)
+creds_dict["private_key"] = creds_dict["private_key"].replace("\\\\n", "\n")
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scopes)
+gc = gspread.authorize(creds)
+server_doc = gc.open_by_url(os.environ(["SERVER_URL"]))
+worksheet_list = ["serverInformation", "serverLog", "lolUserInformation"]
+server_worksheet, log_worksheet, lol_worksheet = list(map(lambda x: server_doc.worksheet(x), worksheet_list))
 
 
 # 시간 얻기
