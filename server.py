@@ -99,7 +99,7 @@ async def set_lol_info(ctx, lol_nickname, ability):
         return result_search_summoner
 
 
-# 등록 되어있는지 확인하기 (ture: return col_num false: return None)
+# 등록 되어있는지 확인하기 (ture: return col_num false: return 등록 요구 embed)
 async def is_sign_up(ctx):
     try:
         user = lol_worksheet.find(str(ctx.message.author.id))
@@ -198,9 +198,9 @@ async def count_win_defeat(user_ppuid):
 # 롤 정보 불러오기
 async def get_lol_info(ctx):
     user_id = await is_sign_up(ctx)
-    # 만약 유저를 찾을 수 없을 때(return이 None일 때) -1을 return
-    if not user_id:
-        return -1
+    # 만약 유저를 찾을 수 없을 때(return이 등록 요구일 때) embed를 return
+    if isinstance(user_id, discord.embeds.Embed):
+        return user_id
     lol_nickname = lol_worksheet.acell('B' + str(user_id)).value
     # 유저 기본 정보 검색 (프로필, 레벨, puuid)
     lol_info = await search_summoner(lol_nickname, ctx)
