@@ -1,4 +1,6 @@
 import discord
+import traceback
+import sys
 from discord.ext import commands
 
 # 프로젝트 모듈
@@ -58,7 +60,8 @@ async def on_command_error(ctx, error):
                                 value='`' + ctx.message.content + "`는 없습니다.", inline=False)
         await ctx.send(embed=command_error, delete_after=7.0)
         return
-
+    # embed는 최대 1200자
+    '''
     # Logical Error
     class ClickButton(discord.ui.View):
         @discord.ui.button(label="에러 전송하기", style=discord.ButtonStyle.red)
@@ -76,7 +79,8 @@ async def on_command_error(ctx, error):
     critical_error = discord.Embed(title="치명적인 에러", description="치명적인 에러가 발생했습니다! 개발자 일감을 주기 위해 전송 버튼을 눌러주세요!",
                                    color=0xFF0000)
     await ctx.send(embed=critical_error, view=ClickButton())
-
+    '''
+    await ctx.send(f"치명적인 에러발생\t사용한 명령어: {ctx.command}\n```py\n{traceback.format_exception(type(error), error, error.__traceback__)}```")
 
 @bot.command(name="로드")
 @commands.has_permissions(administrator=True)
