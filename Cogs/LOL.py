@@ -233,13 +233,6 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             view.add_item(item=item)
             await ctx.send(embed=embed, view=view, delete_after=60.0)
 
-    @commands.command()
-    async def test(self, ctx):
-        embed = discord.Embed(title="test")
-        if isinstance(embed, discord.Embed):
-            await ctx.send(embed=embed)
-        else:
-            await ctx.send(isinstance(embed, discord.Embed))
 
 def setup(bot):
     bot.add_cog(LOL(bot))
