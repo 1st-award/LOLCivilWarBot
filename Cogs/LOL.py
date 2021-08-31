@@ -186,7 +186,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             else:
                 out_of_range = discord.Embed(title="티어 범위 오류", description="1~10중 하나를 입력해주세요", color=0xFF0000)
                 await ctx.send(embed=out_of_range, delete_after=5.0)
-        except AttributeError and ValueError:
+        except AttributeError and ValueError and IndexError:
             attribute_error = discord.Embed(title="형식 오류",
                                             description="형식이 잘못되었습니다.\n`!등록`\t`[롤 닉네임]`\t`[티어]`를 입력해주세요!",
                                             color=0xFF0000)
@@ -232,6 +232,12 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                                      url="https://www.op.gg/summoner/userName=" + user_info[1])
             view.add_item(item=item)
             await ctx.send(embed=embed, view=view, delete_after=60.0)
+
+    @commands.command()
+    async def test(self, ctx):
+        embed = discord.Embed(title=ctx.message.author.nick + "님의 정보", colour=discord.Colour.blurple(),
+                              timestamp=discord.utils.utcnow())
+        await ctx.send(isinstance(embed, discord.Embed))
 
 
 def setup(bot):
