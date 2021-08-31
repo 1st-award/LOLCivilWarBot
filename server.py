@@ -25,7 +25,6 @@ log_worksheet = server_doc.worksheet('serverLog')
 lol_worksheet = server_doc.worksheet('lolUserInformation')
 '''
 
-
 # Heroku
 # 구글 스프레드 시트 연결
 scopes = ['https://spreadsheets.google.com/feeds',
@@ -38,7 +37,9 @@ gc = gspread.authorize(creds)
 server_doc = gc.open_by_url(os.environ["SERVER_URL"])
 worksheet_list = ["serverInformation", "serverLog", "lolUserInformation"]
 server_worksheet, log_worksheet, lol_worksheet = list(map(lambda x: server_doc.worksheet(x), worksheet_list))
+<<<<<<< HEAD
 '''
+
 
 # 시간 얻기
 async def get_date():
@@ -104,11 +105,15 @@ async def set_lol_info(ctx, lol_nickname, ability):
 async def is_sign_up(ctx):
     try:
         user = lol_worksheet.find(str(ctx.message.author.id))
-        if user:
+        if isinstance(user, gspread.models.Cell):
             split_col = str(user).split()
             split_col = split_col[1].split('R')
             split_col = split_col[1].split('C')
             return int(split_col[0])
+        else:
+            return discord.Embed(title="등록 요구",
+                                 description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 "
+                                                                          "해주세요.", color=0xFF0000)
     except Exception:
         return discord.Embed(title="등록 요구",
                              description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 "
@@ -202,7 +207,7 @@ async def count_win_defeat(user_ppuid):
 async def get_lol_info(ctx):
     user_id = await is_sign_up(ctx)
     # 만약 유저를 찾을 수 없을 때(return이 등록 요구일 때) embed를 return
-    if isinstance(user_id, discord.embeds.Embed):
+    if isinstance(user_id, discord.Embed):
         return user_id
     lol_nickname = lol_worksheet.acell('B' + str(user_id)).value
     # 유저 기본 정보 검색 (프로필, 레벨, puuid)
@@ -215,5 +220,5 @@ async def get_lol_info(ctx):
         win, defeat = await count_win_defeat(user_ppuid)
         return [user_profile_icon, lol_nickname, user_level, win, defeat]
     # 정상적으로 값을 찾지 못했을 때 (오류 Embed가 들어왔을 때)
-    elif isinstance(lol_info, discord.embeds.Embed):
+    elif isinstance(lol_info, discord.Embed):
         return lol_info

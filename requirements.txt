@@ -1,7 +1,6 @@
 asyncio
 git+https://github.com/Rapptz/discord.py
-gspread~=3.7.0
-oauth2client~=4.1.3
-requests~=2.26.0
-
-discord~=1.7.3
+gspread
+oauth2client
+requests
+discord
