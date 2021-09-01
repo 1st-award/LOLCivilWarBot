@@ -93,7 +93,7 @@ async def set_lol_info(ctx, lol_nickname, ability):
     # 소환사 검색에서 소환사의 정보가 있으면 google_spread에 유저를 등록
     result_search_summoner = await search_summoner(lol_nickname, ctx)
     if not isinstance(result_search_summoner, discord.embeds.Embed):
-        lol_worksheet.insert_row([str(ctx.message.author.id), str(lol_nickname), str(ability)], 2)
+        lol_worksheet.insert_row([str(ctx.message.author.id), str(lol_nickname), str(ability)], 0, 0, 2)
         return discord.Embed(title="등록 완료",
                              description=ctx.message.author.mention + '\0등록이 완료되었습니다.',
                              colour=discord.Colour.green())

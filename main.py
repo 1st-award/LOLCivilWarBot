@@ -54,8 +54,8 @@ async def on_command_completion(ctx):
 # 명령어가 실패했을 때 개발자에게 전송
 @bot.event
 async def on_command_error(ctx, error):
-    await ctx.send(traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr))
-    return
+    # await ctx.send(traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr))
+    # return
     # Command Not Found
     if isinstance(error, discord.ext.commands.errors.CommandNotFound):
         command_error = discord.Embed(title="명령어 오류", description="다음과 같은 에러가 발생했습니다.", color=0xFF0000)
@@ -122,4 +122,4 @@ async def reload_commands(extension=None):
 
 
 # bot.run(os.environ["BOT_TOKEN"])
-bot.run('NDU1OTU3MzI0NjI0OTUzMzU0.Wx9RWQ.SuDCqKOnfjnm2kXzT3IyGaGG-oc')
+bot.run('NDU1OTU3MzI0NjI0OTUzMzU0.Wx9RWQ.wEsTjcNRp1Ex0SrqlyKptTT-mqY')
