@@ -18,8 +18,8 @@ button_msg = None
 
 class LOL(commands.Cog, name="롤 내전 명령어"):
 
-    def __init__(self, _bot):
-        self.bot = _bot
+    def __init__(self, bot):
+        self.bot = bot
 
     @commands.command(name="내전시작", help="내전을 시작합니다! 준비버튼을 눌러주세요!", usage="`!내전시작`")
     async def start_join(self, ctx):
@@ -100,7 +100,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                                             color=0xFF0000)
             await ctx.send(embed=not_enough_user, delete_after=5.0)
             return
-        user_dic = await get_ablity_score(join_member)
+        user_dic = await get_ability_score(join_member)
         msg = await ctx.send("팀을 만듭니다...")
         # Create a Bellance Team
         while True:
@@ -113,12 +113,12 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             for red in user_dic:
                 if red not in blue_team:
                     red_team.append(red)
-            # Get the blue team's ablity
-            for ablity in blue_team:
-                blue_team_point.append(user_dic.get(ablity))
-            # Get the red team's ablity
-            for ablity in red_team:
-                red_team_point.append(user_dic.get(ablity))
+            # Get the blue team's ability
+            for ability in blue_team:
+                blue_team_point.append(user_dic.get(ability))
+            # Get the red team's ability
+            for ability in red_team:
+                red_team_point.append(user_dic.get(ability))
             # Team average difference between 0 and 0.25
             if 0 <= abs(
                     sum(blue_team_point) / len(blue_team_point) - sum(red_team_point) / len(blue_team_point)) <= 0.25:
@@ -168,13 +168,71 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                                         colour=discord.Colour.blurple())
             await ctx.send(embed=reset_clear, delete_after=10.0)
 
+    # Get Guild Member Dictionary
+    async def get_member_dict(self, guild_id):
+        member_dict = {}
+        for member in self.bot.get_guild(guild_id).members:
+            if not member.bot:
+                member_dict[member.nick] = member.id
+        return member_dict
+
+    # Set UserInfo
+    async def set_user_info(self, user_info, member_dict):
+        user_info_list = []
+
+        class UserInfo:
+            def __init__(self, user_id, user_lol_id, ability):
+                self.user_id = user_id
+                self.user_lol_id = user_lol_id
+                self.ability = ability
+        try:
+            for i in range(1, len(user_info), 3):
+                # 티어 범위가 0 ~ 10일 때 코드 실행
+                if 0 <= int(user_info[i+2]) <= 10:
+                    # 'member_dict'에 'user_nick'이 있으면
+                    if member_dict[user_info[i]]:
+                        user_info_list.append(UserInfo(member_dict[user_info[i]], user_info[i + 1], user_info[i + 2]))
+                # 범위 밖이면 범위 오류 return
+                else:
+                    return discord.Embed(title="티어 범위 오류", description="1~10중 하나를 입력해주세요", color=0xFF0000)
+            return user_info_list
+        except KeyError:
+            return discord.Embed(title="형식 오류", description="닉네임에 공백이 있으면 `_`를 넣어주세요!", color=0xFF0000)
+
     # LOL INFO Registration
     async def register(self, ctx, register_type):
         try:
             msg = ctx.message.content.split()
-            if 0 <= int(msg[2]) <= 10:
-                result = await set_lol_info(ctx, msg[1], msg[2])
+            # 등록 2명 이상
+            if len(msg) > 3:
+                member_dict = await self.get_member_dict(ctx.guild.id)
+                register_list = await self.set_user_info(msg, member_dict)
+                # 공백 닉네임에 '_'를 안채워 넣엇을 시 발생하는 애러에 대해서 전송 이때 모든 활동 정지
+                if isinstance(register_list, discord.Embed):
+                    await ctx.send(embed=register_list, delete_after=5.0)
+                    return
+                result_title = []
+                result_description = []
+                for member in register_list:
+                    result = await set_lol_info(member.user_id, member.user_lol_id, member.ability)
+                    if isinstance(result, discord.Embed):
+                        if result.title == "토큰 재인증 필요":
+                            await main.on_command_error(ctx, "봇 토큰 재인증 필요")
+                        else:
+                            result_title.append(result.title)
+                            result_description.append(result.description)
+                register_result = discord.Embed(title="등록 결과", description="다음과 같이 완료되었습니다.", colour=discord.Colour.blurple())
+                # Add result
+                member_dict = dict(map(reversed, member_dict.items()))
+                for i in range(len(result_title)):
+                    user_mention = result_description[i].split(" ")
+                    result_description[i] = result_description[i].replace(user_mention[0], member_dict[int(user_mention[0].strip("<@{}>"))])
+                    register_result.add_field(name=result_title[i], value=result_description[i])
+                await ctx.send(embed=register_result, delete_after=20.0)
 
+            # 등록 한 명
+            elif 0 <= int(msg[2]) <= 10:
+                result = await set_lol_info(ctx, msg[1], msg[2])
                 if result.title == "토큰 재인증 필요":
                     await main.on_command_error(ctx, "봇 토큰 재인증 필요")
                 else:
@@ -193,7 +251,11 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             await ctx.send(embed=attribute_error, delete_after=7.0)
 
     @commands.command(name="등록",
-                      help="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요!\n티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!",
+                      help="유저 정보를 등록합니다. !등록 [롤 닉네임] [티어]를 입력해주세요!\n"
+                           "한 명이 여러 명 등록하고 싶을 경우.\n"
+                           "!등록 [체널 닉네임1] [롤 닉네임1] [티어1] [체널 닉네임2] [롤 닉네임2] [티어2]\n"
+                           "이름에 공백이 포함되어 있는 경우 공백에 `_`를 넣어주세요!\n"
+                           "티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!",
                       usage="`!등록`\0`롤 닉네임`\0`1~10사이의 실력`")
     async def registration(self, ctx):
         await ctx.message.delete()
@@ -232,12 +294,6 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                                      url="https://www.op.gg/summoner/userName=" + user_info[1])
             view.add_item(item=item)
             await ctx.send(embed=embed, view=view, delete_after=60.0)
-
-    @commands.command()
-    async def test(self, ctx):
-        embed = discord.Embed(title=ctx.message.author.nick + "님의 정보", colour=discord.Colour.blurple(),
-                              timestamp=discord.utils.utcnow())
-        await ctx.send(isinstance(embed, discord.Embed))
 
 
 def setup(bot):

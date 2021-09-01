@@ -7,7 +7,7 @@ import os
 import requests
 from oauth2client.service_account import ServiceAccountCredentials
 
-
+'''
 # PC
 # 구글 스프레드 시트 연결
 scope = [
@@ -23,6 +23,8 @@ server_doc = gc.open_by_url(
 server_worksheet = server_doc.worksheet('serverInformation')
 log_worksheet = server_doc.worksheet('serverLog')
 lol_worksheet = server_doc.worksheet('lolUserInformation')
+# 롤 토큰
+lol_token = "**"
 '''
 
 # Heroku
@@ -37,8 +39,6 @@ gc = gspread.authorize(creds)
 server_doc = gc.open_by_url(os.environ["SERVER_URL"])
 worksheet_list = ["serverInformation", "serverLog", "lolUserInformation"]
 server_worksheet, log_worksheet, lol_worksheet = list(map(lambda x: server_doc.worksheet(x), worksheet_list))
-<<<<<<< HEAD
-'''
 
 
 # 시간 얻기
@@ -58,24 +58,23 @@ async def guild_join(guild):
 
 
 # 명령어 성공 했을 때
-async def log(type, executed_command, guild_name, guild_id, author, author_id):
+async def log(message_type, executed_command, guild_name, guild_id, author, author_id):
     log_worksheet.insert_row(
-        [type, await get_date(), await get_time(), executed_command, guild_name, guild_id, author, author_id], 2)
+        [message_type, await get_date(), await get_time(), executed_command, guild_name, guild_id, author, author_id],
+        2)
 
 
 # 소환사 검색
-async def search_summoner(lol_nickname, ctx):
+async def search_summoner(lol_nickname, user_id):
     URL = "https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + lol_nickname
-    # res = requests.get(URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
-    res = requests.get(URL, headers={"X-Riot-Token": "RGAPI-af4e5f51-fa9e-4254-a1f5-beeeec4df128"})
+    res = requests.get(URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
+    # res = requests.get(URL, headers={"X-Riot-Token": lol_token})
     # Normal
     if res.status_code == 200:
         return res.json()
-
     # Not Found Summoner
     elif res.status_code == 404:
-        return discord.Embed(title="존재하지 않는 소환사", description=ctx.message.author.mention +
-                                                              "존재하지 않는 소환사 입니다.", color=0xFF0000)
+        return discord.Embed(title="존재하지 않는 소환사", description=f"<@{user_id}> 존재하지 않는 소환사 입니다.", color=0xFF0000)
     # Need Regenerate
     elif res.status_code == 403:
         return discord.Embed(title="토큰 재인증 필요", description="개발자가 개을러서 재인증을 하지 않았습니다.\n"
@@ -83,28 +82,27 @@ async def search_summoner(lol_nickname, ctx):
 
 
 # 롤 정보 등록
-async def set_lol_info(ctx, lol_nickname, ability):
+async def set_lol_info(user_id, lol_nickname, ability):
     # Duplicate Registration
-    result_is_sign_up = await is_sign_up(ctx)
+    result_is_sign_up = await is_sign_up(user_id)
     if isinstance(result_is_sign_up, int):
-        return discord.Embed(title="중복 등록", description=ctx.message.author.mention +
-                                                        "\0이미 등록되어 있는 유저입니다.", color=0xFF0000)
+        return discord.Embed(title="중복 등록", description=f"<@{user_id}> 이미 등록되어 있는 유저입니다.", color=0xFF0000)
 
     # 소환사 검색에서 소환사의 정보가 있으면 google_spread에 유저를 등록
-    result_search_summoner = await search_summoner(lol_nickname, ctx)
+    result_search_summoner = await search_summoner(lol_nickname, user_id)
     if not isinstance(result_search_summoner, discord.embeds.Embed):
-        lol_worksheet.insert_row([str(ctx.message.author.id), str(lol_nickname), str(ability)], 0, 0, 2)
+        lol_worksheet.insert_row([str(user_id), str(lol_nickname), str(ability), 0, 0], 2)
         return discord.Embed(title="등록 완료",
-                             description=ctx.message.author.mention + '\0등록이 완료되었습니다.',
+                             description=f"<@{user_id}> 등록이 완료되었습니다.",
                              colour=discord.Colour.green())
     else:
         return result_search_summoner
 
 
 # 등록 되어있는지 확인하기 (ture: return col_num false: return 등록 요구 embed)
-async def is_sign_up(ctx):
+async def is_sign_up(user_id):
     try:
-        user = lol_worksheet.find(str(ctx.message.author.id))
+        user = lol_worksheet.find(str(user_id))
         if isinstance(user, gspread.models.Cell):
             split_col = str(user).split()
             split_col = split_col[1].split('R')
@@ -112,12 +110,10 @@ async def is_sign_up(ctx):
             return int(split_col[0])
         else:
             return discord.Embed(title="등록 요구",
-                                 description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 "
-                                                                          "해주세요.", color=0xFF0000)
+                                 description=f"<@{user_id}>님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 해주세요.", color=0xFF0000)
     except Exception:
         return discord.Embed(title="등록 요구",
-                             description=ctx.message.author.mention + "님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 "
-                                                                      "해주세요.", color=0xFF0000)
+                             description=f"<@{user_id}>님은 등록이 되어있지 않은 유저입니다.\n`!등록`을 먼저 해주세요.", color=0xFF0000)
 
 
 # 등록 되어있는 롤 유저 정보 삭제하기 (true: return 1 false: col_num(None))
@@ -131,13 +127,13 @@ async def delete_lol_info(ctx):
 
 
 # 스프레드시트 롤 정보 불러오기
-async def get_ablity_score(user_list):
-    ablity_dic = {}
+async def get_ability_score(user_list):
+    ability_dic = {}
     user_id = lol_worksheet.col_values(1)
-    user_ablity = lol_worksheet.col_values(3)
+    user_ability = lol_worksheet.col_values(3)
     for user in user_list:
-        ablity_dic[user] = int(user_ablity[user_id.index(str(user))])
-    return ablity_dic
+        ability_dic[user] = int(user_ability[user_id.index(str(user))])
+    return ability_dic
 
 
 # 최근 10 게임 승/패 검색
@@ -155,8 +151,8 @@ async def count_win_defeat(user_ppuid):
             if self.count < self.stop:
                 # 각 매치 당 승, 패 검색
                 EACH_MATCH_URL = "https://asia.api.riotgames.com/lol/match/v5/matches/" + match_info[self.count]
-                # each_match_res = requests.get(EACH_MATCH_URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
-                each_match_res = requests.get(EACH_MATCH_URL, headers={"X-Riot-Token": "RGAPI-af4e5f51-fa9e-4254-a1f5-beeeec4df128"})
+                each_match_res = requests.get(EACH_MATCH_URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
+                # each_match_res = requests.get(EACH_MATCH_URL, headers={"X-Riot-Token": lol_token})
                 self.count += 1
                 return each_match_res.json()
             else:
@@ -187,16 +183,16 @@ async def count_win_defeat(user_ppuid):
     # 최근 게임 10개 검색
     win = defeat = 0
     MATCH_URL = "https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/" + user_ppuid + "/ids?start=0&count=10"
-    # match_res = requests.get(MATCH_URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
-    match_res = requests.get(MATCH_URL, headers={"X-Riot-Token": "RGAPI-af4e5f51-fa9e-4254-a1f5-beeeec4df128"})
+    match_res = requests.get(MATCH_URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
+    # match_res = requests.get(MATCH_URL, headers={"X-Riot-Token": lol_token})
     match_info = match_res.json()
     async for each_match_info in SearchGame(10):
-        async for user_num in CountWinDefeat(len(each_match_info["info"]["participants"])):
+        async for win in CountWinDefeat(len(each_match_info["info"]["participants"])):
             # 한 게임에 유저를 찾지 못했을 때 None을 Return 하므로 break를 각각의 if문에 넣어줘야한다
-            if user_num == 1:
+            if win == 1:
                 win += 1
                 break
-            elif user_num == -1:
+            elif win == -1:
                 defeat += 1
                 break
 

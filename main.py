@@ -1,5 +1,3 @@
-import sys
-
 import discord
 import traceback
 from discord.ext import commands
@@ -9,7 +7,7 @@ from server import *
 
 # 봇 권한 부여
 intents = discord.Intents(messages=True, guilds=True, members=True)
-bot = commands.Bot(command_prefix='@', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
 # !도움말을 위한 기존에 있는 help 제거
 bot.remove_command('help')
 
@@ -82,7 +80,7 @@ async def on_command_error(ctx, error):
 
     critical_error = discord.Embed(title="치명적인 에러", description="치명적인 에러가 발생했습니다! 개발자 일감을 주기 위해 전송 버튼을 눌러주세요!",
                                    color=0xFF0000)
-    await ctx.send(embed=critical_error, view=ClickButton())
+    await ctx.send(embed=critical_error, view=ClickButton(), delete_after=90.0)
     # await ctx.send(f"치명적인 에러발생\t사용한 명령어: {ctx.command}\n```py\n{traceback.format_exception(type(error), error,
     # error.__traceback__)}```")
 
@@ -121,5 +119,4 @@ async def reload_commands(extension=None):
         await bot_owner.send(f":white_check_mark: {extension}을(를) 다시 불러왔습니다!")
 
 
-# bot.run(os.environ["BOT_TOKEN"])
-bot.run('NDU1OTU3MzI0NjI0OTUzMzU0.Wx9RWQ.wEsTjcNRp1Ex0SrqlyKptTT-mqY')
+bot.run(os.environ["BOT_TOKEN"])
