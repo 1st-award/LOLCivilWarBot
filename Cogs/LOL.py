@@ -195,9 +195,12 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
         try:
             for i in range(1, len(user_info), 3):
                 # 티어 범위가 0 ~ 10일 때 코드 실행
+                # user_info[i]: user_id, user_info[i+1]: user_lol_id, user_info[i+2]: ability
                 if 0 <= int(user_info[i + 2]) <= 10:
                     # 'user_nick'에 _가 포함되어있으면 공백으로 변환
                     user_info[i] = user_info[i].replace('_', ' ')
+                    # 'user_lol_id'에 _가 포함되어있으면 공백으로 변환
+                    user_info[i+1] = user_info[i+1].replace('_', ' ')
                     # 'member_dict'에 'user_nick'이 있으면
                     if member_dict[user_info[i]]:
                         user_info_list.append(UserInfo(member_dict[user_info[i]], user_info[i + 1], user_info[i + 2]))
@@ -295,12 +298,14 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             embed.set_thumbnail(
                 url="https://ddragon.leagueoflegends.com/cdn/11.15.1/img/profileicon/" + str(user_info[0]) + ".png")
             embed.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
-            embed.add_field(name="`롤 닉네임`", value=user_info[1], inline=True)
-            embed.add_field(name="`롤 레벨`", value=str(user_info[2]), inline=True)
+            embed.add_field(name="`롤 닉네임`", value=user_info[1])
+            embed.add_field(name="`롤 레벨`", value=str(user_info[2]))
+            # Dummy embed
+            embed.add_field(name="\u200b", value="\u200b")
             # embed.add_field(name="`최근 10게임 승/패`", value=str(user_info[3]) + "승\0" + str(user_info[4]) + "패",
             #                 inline=False)
-            embed.add_field(name="`내전 게임 승/패`", value=str(user_info[3]) + "승\0" + str(user_info[4]) + "패",
-                            inline=False)
+            embed.add_field(name="`내전 게임 승/패`", value=str(user_info[3]) + "승\0" + str(user_info[4]) + "패")
+            embed.add_field(name="`내전 레벨`", value=str(user_info[5]))
             embed.set_footer(icon_url=ctx.bot.user.avatar.url, text=ctx.bot.user)
             view = discord.ui.View()
             item = discord.ui.Button(style=discord.ButtonStyle.link, label="자세한 내용",
