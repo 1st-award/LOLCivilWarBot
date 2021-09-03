@@ -67,6 +67,8 @@ async def log(message_type, executed_command, guild_name, guild_id, author, auth
 
 # 소환사 검색
 async def search_summoner(lol_nickname, user_id):
+    # 'lol_nickname'에 _가 있으면 공백으로 대체
+    lol_nickname = lol_nickname.replace('_', ' ')
     URL = "https://kr.api.riotgames.com/lol/summoner/v4/summoners/by-name/" + lol_nickname
     res = requests.get(URL, headers={"X-Riot-Token": os.environ["LOL_TOKEN"]})
     # res = requests.get(URL, headers={"X-Riot-Token": lol_token})
@@ -92,6 +94,8 @@ async def set_lol_info(user_id, lol_nickname, ability):
     # 소환사 검색에서 소환사의 정보가 있으면 google_spread에 유저를 등록
     result_search_summoner = await search_summoner(lol_nickname, user_id)
     if not isinstance(result_search_summoner, discord.embeds.Embed):
+        # 'lol_nickname'에 _있으면 공백으로 대체
+        lol_nickname = lol_nickname.replace('_', ' ')
         lol_worksheet.insert_row([str(user_id), str(lol_nickname), str(ability), 0, 0], 2)
         return discord.Embed(title="등록 완료",
                              description=f"<@{user_id}> 등록이 완료되었습니다.",
@@ -200,21 +204,23 @@ async def count_win_defeat(user_ppuid):
     return win, defeat'''
 
 
-# 내전 승/패 가져오기
-async def get_civil_war_win_defeat(user_id):
+# 스프레드 시트에 있는 정보 가져오기
+async def get_lol_worksheet_information(user_id_col):
     # 요청한 유저의 디스코드 id를 이용해서 유저의 행 가져오기
-    user_info = lol_worksheet.row_values(user_id)
-    # 승 / 패 return
-    return user_info[3], user_info[4]
+    user_info = lol_worksheet.row_values(user_id_col)
+    # 롤 닉네임 / 승 / 패 return
+    return user_info[1], user_info[3], user_info[4], user_info[2]
 
 
 # 롤 정보 불러오기
 async def get_lol_info(user_id):
     user_id_col = await is_sign_up(user_id)
     # 만약 유저를 찾을 수 없을 때(return이 등록 요구일 때) embed를 return
-    if isinstance(user_id, discord.Embed):
-        return user_id
-    lol_nickname = lol_worksheet.acell('B' + str(user_id_col)).value
+    if isinstance(user_id_col, discord.Embed):
+        return user_id_col
+    # lol_nickname = lol_worksheet.acell('B' + str(user_id_col)).value
+    # 스프레드 시트 정보 가져오기
+    lol_nickname, win, defeat, ability = await get_lol_worksheet_information(user_id_col)
     # 유저 기본 정보 검색 (프로필, 레벨, puuid)
     lol_info = await search_summoner(lol_nickname, user_id)
     # 정상적으로 유저 서칭이 되었을 때 (return 200을 받앗을 때)
@@ -223,8 +229,7 @@ async def get_lol_info(user_id):
         user_level = lol_info["summonerLevel"]
         # user_ppuid = lol_info["puuid"]
         # win, defeat = await count_win_defeat(user_ppuid)
-        win, defeat = await get_civil_war_win_defeat(user_id)
-        return [user_profile_icon, lol_nickname, user_level, win, defeat]
+        return [user_profile_icon, lol_nickname, user_level, win, defeat, ability]
     # 정상적으로 값을 찾지 못했을 때 (오류 Embed가 들어왔을 때)
     elif isinstance(lol_info, discord.Embed):
         return lol_info
