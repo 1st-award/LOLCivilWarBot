@@ -46,7 +46,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             async def count(self, button: discord.ui.Button, interaction: discord.Interaction):
                 self.number += 1
                 # No Register
-                is_sign_up_result = await is_sign_up(ctx)
+                is_sign_up_result = await is_sign_up(ctx.author.id)
                 if isinstance(is_sign_up_result, discord.Embed):
                     await interaction.message.channel.send(embed=is_sign_up_result, delete_after=5.0)
                 # Already join member use button
@@ -243,7 +243,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
 
             # 등록 한 명
             elif 0 <= int(msg[2]) <= 10:
-                result = await set_lol_info(ctx, msg[1], msg[2])
+                result = await set_lol_info(ctx.author.id, msg[1], msg[2])
                 if result.title == "토큰 재인증 필요":
                     await main.on_command_error(ctx, "봇 토큰 재인증 필요")
                 else:
@@ -275,7 +275,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
     @commands.command(name="수정", help="`등록`에서 적엇던 정보를 수정합니다.", usage="`!수정`\0`롤 닉네임`\0`1~10사이의 실력`")
     async def modify_lol_info(self, ctx):
         await ctx.message.delete()
-        delete_result = await delete_lol_info(ctx)
+        delete_result = await delete_lol_info(ctx.author.id)
         if isinstance(delete_result, discord.Embed):
             await ctx.send(embed=delete_result, delete_after=5.0)
         # delete success
@@ -285,7 +285,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
     @commands.command(name="정보", help="내 정보를 불러옵니다.", usage="`!정보`")
     async def my_information(self, ctx):
         await ctx.message.delete()
-        user_info = await get_lol_info(ctx)
+        user_info = await get_lol_info(ctx.author.id)
         # 서칭 중 에러가 return 됐을 때
         if isinstance(user_info, discord.Embed):
             await ctx.send(embed=user_info, delete_after=5.0)
