@@ -191,6 +191,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                 self.user_id = user_id
                 self.user_lol_id = user_lol_id
                 self.ability = ability
+
         try:
             for i in range(1, len(user_info), 3):
                 # 티어 범위가 0 ~ 10일 때 코드 실행
@@ -296,7 +297,9 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             embed.set_author(name=ctx.author, icon_url=ctx.author.avatar.url)
             embed.add_field(name="`롤 닉네임`", value=user_info[1], inline=True)
             embed.add_field(name="`롤 레벨`", value=str(user_info[2]), inline=True)
-            embed.add_field(name="`최근 10게임 승/패`", value=str(user_info[3]) + "승\0" + str(user_info[4]) + "패",
+            # embed.add_field(name="`최근 10게임 승/패`", value=str(user_info[3]) + "승\0" + str(user_info[4]) + "패",
+            #                 inline=False)
+            embed.add_field(name="`내전 게임 승/패`", value=str(user_info[3]) + "승\0" + str(user_info[4]) + "패",
                             inline=False)
             embed.set_footer(icon_url=ctx.bot.user.avatar.url, text=ctx.bot.user)
             view = discord.ui.View()

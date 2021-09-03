@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import asyncio
 import datetime
 import discord
 import gspread
@@ -136,7 +137,8 @@ async def get_ability_score(user_list):
     return ability_dic
 
 
-# 최근 10 게임 승/패 검색
+# 롤 개인 토큰이 초당 20 request, 2분당 100 request, 아직까진 쓰기에 무리가 있음
+'''# 최근 10 게임 승/패 검색
 async def count_win_defeat(user_ppuid):
     # 게임 정보 찾기
     class SearchGame:
@@ -192,11 +194,18 @@ async def count_win_defeat(user_ppuid):
             if game_result == 1:
                 win += 1
                 break
-            elif win == -1:
+            elif game_result == -1:
                 defeat += 1
                 break
+    return win, defeat'''
 
-    return win, defeat
+
+# 내전 승/패 가져오기
+async def get_civil_war_win_defeat(user_id):
+    # 요청한 유저의 디스코드 id를 이용해서 유저의 행 가져오기
+    user_info = lol_worksheet.row_values(user_id)
+    # 승 / 패 return
+    return user_info[3], user_info[4]
 
 
 # 롤 정보 불러오기
@@ -212,8 +221,9 @@ async def get_lol_info(ctx):
     if isinstance(lol_info, dict):
         user_profile_icon = lol_info["profileIconId"]
         user_level = lol_info["summonerLevel"]
-        user_ppuid = lol_info["puuid"]
-        win, defeat = await count_win_defeat(user_ppuid)
+        # user_ppuid = lol_info["puuid"]
+        # win, defeat = await count_win_defeat(user_ppuid)
+        win, defeat = await get_civil_war_win_defeat(user_id)
         return [user_profile_icon, lol_nickname, user_level, win, defeat]
     # 정상적으로 값을 찾지 못했을 때 (오류 Embed가 들어왔을 때)
     elif isinstance(lol_info, discord.Embed):
