@@ -245,7 +245,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                 await ctx.send(embed=register_result, delete_after=20.0)
 
             # 등록 한 명
-            elif 0 <= int(msg[2]) <= 10:
+            elif 1 <= int(msg[2]) <= 10:
                 result = await set_lol_info(ctx.author.id, msg[1], msg[2])
                 if result.title == "토큰 재인증 필요":
                     await main.on_command_error(ctx, "봇 토큰 재인증 필요")
@@ -269,7 +269,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                            "한 명이 여러 명 등록하고 싶을 경우.\n"
                            "!등록 [체널 닉네임1] [롤 닉네임1] [티어1] [체널 닉네임2] [롤 닉네임2] [티어2]\n"
                            "이름에 공백이 포함되어 있는 경우 공백에 `_`를 넣어주세요!\n"
-                           "티어는 롤 티어가 아닌 실력 티어로 0~10사이의 숫자를 입력해 주세요!",
+                           "티어는 롤 티어가 아닌 실력 티어로 1~10사이의 숫자를 입력해 주세요!",
                       usage="`!등록`\0`롤 닉네임`\0`1~10사이의 실력`")
     async def registration(self, ctx):
         await ctx.message.delete()
@@ -307,6 +307,8 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
             embed.add_field(name="`내전 게임 승/패`", value=str(user_info[3]) + "승\0" + str(user_info[4]) + "패")
             embed.add_field(name="`내전 레벨`", value=str(user_info[5]))
             embed.set_footer(icon_url=ctx.bot.user.avatar.url, text=ctx.bot.user)
+            # user_info[1]: 롤 닉네임에 공백이 있을 때 %20을 삽입
+            user_info[1] = user_info[1].replace(' ', "%20")
             view = discord.ui.View()
             item = discord.ui.Button(style=discord.ButtonStyle.link, label="자세한 내용",
                                      url="https://www.op.gg/summoner/userName=" + user_info[1])
