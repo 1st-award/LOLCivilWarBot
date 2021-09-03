@@ -213,7 +213,7 @@ async def get_lol_info(user_id):
     user_id_col = await is_sign_up(user_id)
     # 만약 유저를 찾을 수 없을 때(return이 등록 요구일 때) embed를 return
     if isinstance(user_id_col, discord.Embed):
-        return user_id
+        return user_id_col
     lol_nickname = lol_worksheet.acell('B' + str(user_id_col)).value
     # 유저 기본 정보 검색 (프로필, 레벨, puuid)
     lol_info = await search_summoner(lol_nickname, user_id)
