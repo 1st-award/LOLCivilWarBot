@@ -201,7 +201,7 @@ async def count_win_defeat(user_ppuid):
 
 # 롤 정보 불러오기
 async def get_lol_info(ctx):
-    user_id = await is_sign_up(ctx)
+    user_id = await is_sign_up(ctx.author.id)
     # 만약 유저를 찾을 수 없을 때(return이 등록 요구일 때) embed를 return
     if isinstance(user_id, discord.Embed):
         return user_id
