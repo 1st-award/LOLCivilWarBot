@@ -221,6 +221,7 @@ async def get_lol_info(user_id):
     # lol_nickname = lol_worksheet.acell('B' + str(user_id_col)).value
     # 스프레드 시트 정보 가져오기
     lol_nickname, win, defeat, ability = await get_lol_worksheet_information(user_id_col)
+    # lol_nickname = lol_worksheet.acell('B' + str(user_id_col)).value
     # 유저 기본 정보 검색 (프로필, 레벨, puuid)
     lol_info = await search_summoner(lol_nickname, user_id)
     # 정상적으로 유저 서칭이 되었을 때 (return 200을 받앗을 때)
