@@ -172,8 +172,14 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
     async def get_member_dict(self, guild_id):
         member_dict = {}
         for member in self.bot.get_guild(guild_id).members:
+            # 봇이 아니라면 dict 추가
             if not member.bot:
-                member_dict[member.nick] = member.id
+                # 서버 별명이 있다면 별명으로 추가
+                if member.nick:
+                    member_dict[member.nick] = member.id
+                # 없다면 디스코드 별명으로 추가
+                else:
+                    member_dict[member.name] = member.id
         return member_dict
 
     # Set UserInfo
@@ -188,7 +194,9 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
         try:
             for i in range(1, len(user_info), 3):
                 # 티어 범위가 0 ~ 10일 때 코드 실행
-                if 0 <= int(user_info[i+2]) <= 10:
+                if 0 <= int(user_info[i + 2]) <= 10:
+                    # 'user_nick'에 _가 포함되어있으면 공백으로 변환
+                    user_info[i] = user_info[i].replace('_', ' ')
                     # 'member_dict'에 'user_nick'이 있으면
                     if member_dict[user_info[i]]:
                         user_info_list.append(UserInfo(member_dict[user_info[i]], user_info[i + 1], user_info[i + 2]))
@@ -221,12 +229,14 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                         else:
                             result_title.append(result.title)
                             result_description.append(result.description)
-                register_result = discord.Embed(title="등록 결과", description="다음과 같이 완료되었습니다.", colour=discord.Colour.blurple())
+                register_result = discord.Embed(title="등록 결과", description="다음과 같이 완료되었습니다.",
+                                                colour=discord.Colour.blurple())
                 # Add result
                 member_dict = dict(map(reversed, member_dict.items()))
                 for i in range(len(result_title)):
                     user_mention = result_description[i].split(" ")
-                    result_description[i] = result_description[i].replace(user_mention[0], member_dict[int(user_mention[0].strip("<@{}>"))])
+                    result_description[i] = result_description[i].replace(user_mention[0], member_dict[
+                        int(user_mention[0].strip("<@{}>"))])
                     register_result.add_field(name=result_title[i], value=result_description[i])
                 await ctx.send(embed=register_result, delete_after=20.0)
 
