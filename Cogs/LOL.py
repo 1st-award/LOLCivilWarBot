@@ -208,7 +208,7 @@ class LOL(commands.Cog, name="롤 내전 명령어"):
                 else:
                     return discord.Embed(title="티어 범위 오류", description="1~10중 하나를 입력해주세요", color=0xFF0000)
             return user_info_list
-        except KeyError:
+        except (KeyError, ValueError):
             return discord.Embed(title="형식 오류", description="닉네임에 공백이 있으면 `_`를 넣어주세요!", color=0xFF0000)
 
     # LOL INFO Registration
