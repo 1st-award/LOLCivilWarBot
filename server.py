@@ -187,9 +187,9 @@ async def count_win_defeat(user_ppuid):
     # match_res = requests.get(MATCH_URL, headers={"X-Riot-Token": lol_token})
     match_info = match_res.json()
     async for each_match_info in SearchGame(10):
-        async for win in CountWinDefeat(len(each_match_info["info"]["participants"])):
+        async for game_result in CountWinDefeat(len(each_match_info["info"]["participants"])):
             # 한 게임에 유저를 찾지 못했을 때 None을 Return 하므로 break를 각각의 if문에 넣어줘야한다
-            if win == 1:
+            if game_result == 1:
                 win += 1
                 break
             elif win == -1:
